@@ -53,6 +53,9 @@ const GuestHome: React.FC = () => {
   const [latestExamLink, setLatestExamLink] = useState<string | null>(null);
   const [showLinkPopup, setShowLinkPopup] = useState(false);
   const [questionMode, setQuestionMode] = useState<'manual' | 'upload' | null>(null);
+  const [loadingExams, setLoadingExams] = useState(false);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const storedGuestName = localStorage.getItem('guestName');
@@ -76,6 +79,8 @@ const GuestHome: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching guest exams:', error);
+    } finally {
+      setLoadingExams(false);
     }
   };
 
@@ -87,6 +92,8 @@ const GuestHome: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching student results:', error);
+    } finally {
+      setLoadingResults(false);
     }
   };
 
@@ -127,6 +134,7 @@ const GuestHome: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    setSubmitting(true);
     if (!title || !description || !scheduledDate || durationMin <= 0 || passPercentage <= 0) {
       alert('Please fill all fields properly!');
       return;
@@ -158,7 +166,7 @@ const GuestHome: React.FC = () => {
     try {
       const response = await API.post(`/auth/guest/createExam`, payload);
       if (response.data?.examId) {
-        const examLink = `${window.location.origin}/guest-exam/${response.data.examId}`;
+        const examLink = `https://beat-in-blink-ui.vercel.app/guest-exam/${response.data.examId}`;
         setLatestExamLink(examLink);
         setShowLinkPopup(true);
       }
@@ -167,6 +175,8 @@ const GuestHome: React.FC = () => {
       fetchGuestExams(guestCode);
     } catch (error) {
       console.error('Error creating guest exam:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -233,7 +243,10 @@ const GuestHome: React.FC = () => {
         {/* Created Exams Table */}
         <div className="bg-gray-50 rounded-2xl shadow-md p-6">
           <h3 className="text-2xl font-bold mb-4 text-blue-700">Your Created Exams</h3>
-          {exams.length > 0 ? (
+          {loadingExams ? (
+            <p className="text-center text-blue-600 font-medium">Loading exams...</p>
+          ) : exams.length > 0 ? (
+
             <table className="min-w-full bg-white divide-y divide-gray-200">
               <thead>
                 <tr className="bg-gray-200 text-gray-700">
@@ -278,7 +291,9 @@ const GuestHome: React.FC = () => {
         {/* Student Results */}
         <div className="bg-gray-50 rounded-2xl shadow-md p-6">
           <h3 className="text-2xl font-bold mb-4 text-green-700">Student Submissions</h3>
-          {studentResults.length > 0 ? (
+          {loadingResults ? (
+            <p className="text-center text-blue-600 font-medium">Loading submissions...</p>
+          ) : studentResults.length > 0 ? (
             <table className="min-w-full bg-white divide-y divide-gray-200">
               <thead>
                 <tr className="bg-gray-200 text-gray-700">
@@ -479,8 +494,8 @@ const GuestHome: React.FC = () => {
             Add Question
           </Button>
 
-          <Button className="w-full bg-green-700 hover:bg-green-800 mt-6" onClick={handleSubmit}>
-            Submit Exam
+          <Button className="w-full bg-green-700 hover:bg-green-800 mt-6" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Submitting...' : 'Submit Exam'}
           </Button>
         </div>
       </Drawer>

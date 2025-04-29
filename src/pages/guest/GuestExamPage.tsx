@@ -100,6 +100,7 @@ const GuestExamPage: React.FC = () => {
       setResult(res.data);
       setSubmitted(true);
       setShowModal(true); // Show popup
+      localStorage.removeItem('studentName');
     } catch (error) {
       console.error('Error submitting exam:', error);
       alert('Failed to submit answers.');
@@ -129,7 +130,7 @@ const GuestExamPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex items-center gap-4">
-            <span className="text-sm font-semibold">{studentName}</span>
+            <span className="text-sm font-semibold">Hello {studentName}</span>
           </div>
         </div>
       </header>
@@ -198,6 +199,7 @@ const GuestExamPage: React.FC = () => {
                 <p className="text-lg mb-2">Total Score: <strong>{result.totalScore}</strong></p>
                 <p className="text-lg mb-2">Total Marks: <strong>{result.totalMarks}</strong></p>
                 <p className="text-lg mb-4">Score Percentage: <strong>{result.scorePercentage.toFixed(2)}%</strong></p>
+                <p className="text-sm text-gray-600 italic mb-2">For exam papers or feedback, please contact your institute.</p>
                 <Button
                   className="bg-blue-600 hover:bg-blue-700 w-full mt-4"
                   onClick={closeModal}

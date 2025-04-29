@@ -41,7 +41,7 @@ const Home: React.FC = () => {
       }
     } catch (error) {
       console.error('Guest registration error:', error);
-      alert('Something went wrong. Please try again.');
+      alert(`Something went wrong. Please try again. ${error}`);
     } finally {
       setLoading(false);
     }
