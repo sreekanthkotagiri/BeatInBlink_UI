@@ -9,6 +9,8 @@ import TrueFalseQuestion from '../../components/ui/questions/TrueFalseQuestion';
 import ShortAnswerQuestion from '../../components/ui/questions/ShortAnswerQuestion';
 import QuestionForm from '../../lib/validateQuestions ';
 import { isValidType } from '../../utils/utils';
+import Spinner from '../../components/ui/Spinner';
+
 
 type QuestionType = 'multiplechoice' | 'truefalse' | 'shortanswer' | 'radiobutton';
 
@@ -135,12 +137,16 @@ const GuestHome: React.FC = () => {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+
     if (!title || !description || !scheduledDate || durationMin <= 0 || passPercentage <= 0) {
       alert('Please fill all fields properly!');
+      setSubmitting(false);
       return;
     }
+
     if (questions.length === 0) {
       alert('Please add at least one question.');
+      setSubmitting(false);
       return;
     }
 
@@ -169,16 +175,21 @@ const GuestHome: React.FC = () => {
         const examLink = `https://beat-in-blink-ui.vercel.app/guest-exam/${response.data.examId}`;
         setLatestExamLink(examLink);
         setShowLinkPopup(true);
+
+        // Delay closing drawer so popup stays in view
+        setTimeout(() => {
+          setShowDrawer(false);
+          resetForm();
+          fetchGuestExams(guestCode);
+        }, 500);
       }
-      setShowDrawer(false);
-      resetForm();
-      fetchGuestExams(guestCode);
     } catch (error) {
       console.error('Error creating guest exam:', error);
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const resetForm = () => {
     setTitle('');
@@ -243,9 +254,7 @@ const GuestHome: React.FC = () => {
         {/* Created Exams Table */}
         <div className="bg-gray-50 rounded-2xl shadow-md p-6">
           <h3 className="text-2xl font-bold mb-4 text-blue-700">Your Created Exams</h3>
-          {loadingExams ? (
-            <p className="text-center text-blue-600 font-medium">Loading exams...</p>
-          ) : exams.length > 0 ? (
+          {loadingExams ? (<Spinner />) : exams.length > 0 ? (
 
             <table className="min-w-full bg-white divide-y divide-gray-200">
               <thead>
@@ -270,7 +279,6 @@ const GuestHome: React.FC = () => {
                           className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1"
                           onClick={() => {
                             navigator.clipboard.writeText(exam.exam_link || '');
-                            alert('Link copied to clipboard!');
                           }}
                         >
                           Copy Link
@@ -291,9 +299,7 @@ const GuestHome: React.FC = () => {
         {/* Student Results */}
         <div className="bg-gray-50 rounded-2xl shadow-md p-6">
           <h3 className="text-2xl font-bold mb-4 text-green-700">Student Submissions</h3>
-          {loadingResults ? (
-            <p className="text-center text-blue-600 font-medium">Loading submissions...</p>
-          ) : studentResults.length > 0 ? (
+          {loadingResults ? (<Spinner />) : studentResults.length > 0 ? (
             <table className="min-w-full bg-white divide-y divide-gray-200">
               <thead>
                 <tr className="bg-gray-200 text-gray-700">
@@ -457,49 +463,49 @@ const GuestHome: React.FC = () => {
             </>
           )}
           {/* Link Sharing Popup */}
-          {showLinkPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-              <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center space-y-6">
-                <h2 className="text-2xl font-bold text-green-700">Exam Created!</h2>
-                <p className="text-gray-600">Share this link with your students:</p>
-
-                <div className="bg-gray-100 p-3 rounded break-words">
-                  {latestExamLink}
-                </div>
-
-                <Button
-                  className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                  onClick={() => {
-                    if (latestExamLink) {
-                      navigator.clipboard.writeText(latestExamLink);
-                      alert('Link copied to clipboard!');
-                    }
-                  }}
-                >
-                  Copy Link
-                </Button>
-
-                <Button
-                  className="w-full bg-gray-400 text-white hover:bg-gray-500 mt-2"
-                  onClick={() => setShowLinkPopup(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-
-
-          <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={addQuestion}>
-            Add Question
-          </Button>
 
           <Button className="w-full bg-green-700 hover:bg-green-800 mt-6" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? 'Submitting...' : 'Submit Exam'}
+            {submitting ? (
+              <div className="flex justify-center items-center gap-2">
+                <Spinner /> <span>Submitting...</span>
+              </div>
+            ) : (
+              'Submit Exam'
+            )}
           </Button>
         </div>
       </Drawer>
+      {showLinkPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center space-y-6">
+            <h2 className="text-2xl font-bold text-green-700">Exam Created!</h2>
+            <p className="text-gray-600">Share this link with your students:</p>
 
+            <div className="bg-gray-100 p-3 rounded break-words">
+              {latestExamLink}
+            </div>
+
+            <Button
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => {
+                if (latestExamLink) {
+                  navigator.clipboard.writeText(latestExamLink);
+                  alert('Link copied to clipboard!');
+                }
+              }}
+            >
+              Copy Link
+            </Button>
+
+            <Button
+              className="w-full bg-gray-400 text-white hover:bg-gray-500 mt-2"
+              onClick={() => setShowLinkPopup(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
