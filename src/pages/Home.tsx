@@ -7,7 +7,7 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestName, setGuestName] = useState('');
-  const [guestPassword, setGuestPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -18,8 +18,8 @@ const Home: React.FC = () => {
   }, [navigate]);
 
   const handleGuestSubmit = async () => {
-    if (!guestName.trim() || !guestPassword.trim()) {
-      alert('Please enter both Name and Password!');
+    if (!guestName.trim() ) {
+      alert('Please enter Name!');
       return;
     }
 
@@ -27,7 +27,6 @@ const Home: React.FC = () => {
     try {
       const response = await API.post('/auth/guest/register', {
         guestName,
-        guestPassword,
         guestUUID: uuidv4(),
       });
 
@@ -49,34 +48,38 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      
+
       {/* Header */}
-      <header className="bg-blue-800 text-white py-6 px-6 shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl font-extrabold tracking-tight">
-              <span className="text-yellow-400">BeatInBlink</span>
-            </h1>
-            <p className="text-sm font-light italic text-blue-100">
-              Faster, Smarter, In a Blink
-            </p>
+      <header className="bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200 sticky top-0 z-10 h-24">
+        <div className="w-full h-full flex justify-between items-center px-0">
+          {/* Logo */}
+          <div className="h-full pl-6 flex items-center">
+            <img
+              src="/beatinblink3.png"
+              alt="BeatInBlink Logo"
+              className="h-full object-contain"
+              style={{ maxWidth: '320px' }}
+            />
           </div>
-          <div className="mt-4 md:mt-0 flex gap-4">
+
+          {/* Right side actions */}
+          <nav className="flex items-center gap-4 pr-6">
             <Link
               to="/login"
-              className="text-sm bg-white text-blue-800 px-4 py-2 rounded shadow hover:bg-gray-100 transition"
+              className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
             >
               Admin Login
             </Link>
             <button
               onClick={() => setShowGuestModal(true)}
-              className="text-sm bg-yellow-400 text-blue-800 px-4 py-2 rounded shadow hover:bg-yellow-300 transition"
+              className="text-sm bg-yellow-400 text-blue-800 px-4 py-2 rounded hover:bg-yellow-300 transition"
             >
               Guest Access
             </button>
-          </div>
+          </nav>
         </div>
       </header>
+
 
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center text-center px-6 py-16 bg-gray-50">
@@ -106,7 +109,7 @@ const Home: React.FC = () => {
         <h3 className="text-4xl font-bold text-blue-700 mb-6">About BeatInBlink</h3>
         <p className="max-w-4xl mx-auto text-gray-600 text-lg">
           BeatInBlink is a modern platform designed to simplify exam management.
-          Whether you're an educator, an institute, or an individual learner — 
+          Whether you're an educator, an institute, or an individual learner —
           you can create, share, and take exams quickly and effortlessly.
         </p>
       </section>
@@ -151,13 +154,6 @@ const Home: React.FC = () => {
               placeholder="Enter your Name"
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
-              className="border p-2 rounded w-full"
-            />
-            <input
-              type="password"
-              placeholder="Enter Password"
-              value={guestPassword}
-              onChange={(e) => setGuestPassword(e.target.value)}
               className="border p-2 rounded w-full"
             />
             <div className="flex justify-between gap-4">

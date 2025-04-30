@@ -10,6 +10,7 @@ import ShortAnswerQuestion from '../../components/ui/questions/ShortAnswerQuesti
 import QuestionForm from '../../lib/validateQuestions ';
 import { isValidType } from '../../utils/utils';
 import Spinner from '../../components/ui/Spinner';
+import GuestHeader from './GuestHeader';
 
 
 type QuestionType = 'multiplechoice' | 'truefalse' | 'shortanswer' | 'radiobutton';
@@ -58,6 +59,7 @@ const GuestHome: React.FC = () => {
   const [loadingExams, setLoadingExams] = useState(false);
   const [loadingResults, setLoadingResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     const storedGuestName = localStorage.getItem('guestName');
@@ -79,6 +81,7 @@ const GuestHome: React.FC = () => {
       if (response.data?.exams) {
         setExams(response.data.exams);
       }
+      setFormError('');
     } catch (error) {
       console.error('Error fetching guest exams:', error);
     } finally {
@@ -92,6 +95,7 @@ const GuestHome: React.FC = () => {
       if (response.data?.results) {
         setStudentResults(response.data.results);
       }
+      setFormError('');
     } catch (error) {
       console.error('Error fetching student results:', error);
     } finally {
@@ -139,13 +143,13 @@ const GuestHome: React.FC = () => {
     setSubmitting(true);
 
     if (!title || !description || !scheduledDate || durationMin <= 0 || passPercentage <= 0) {
-      alert('Please fill all fields properly!');
+      setFormError('Please fill all exam details correctly.');
       setSubmitting(false);
       return;
     }
 
     if (questions.length === 0) {
-      alert('Please add at least one question.');
+      setFormError('Please add at least one question.');
       setSubmitting(false);
       return;
     }
@@ -172,7 +176,7 @@ const GuestHome: React.FC = () => {
     try {
       const response = await API.post(`/auth/guest/createExam`, payload);
       if (response.data?.examId) {
-        const examLink = `https://beat-in-blink-ui.vercel.app/guest-exam/${response.data.examId}`;
+        const examLink = `${process.env.REACT_APP_API_BASE_URL}/guest-exam/${response.data.examId}`;
         setLatestExamLink(examLink);
         setShowLinkPopup(true);
 
@@ -182,6 +186,7 @@ const GuestHome: React.FC = () => {
           resetForm();
           fetchGuestExams(guestCode);
         }, 500);
+        setFormError('');
       }
     } catch (error) {
       console.error('Error creating guest exam:', error);
@@ -204,25 +209,7 @@ const GuestHome: React.FC = () => {
     <div className="min-h-screen bg-white">
 
       {/* Elegant Header */}
-      <header className="bg-blue-800 text-white py-6 px-6 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl font-extrabold tracking-tight">
-              <span className="text-yellow-400">BeatInBlink</span>
-            </h1>
-            <p className="text-sm font-light italic text-blue-100">Faster, Smarter, In a blink</p>
-          </div>
-          <div className="mt-4 md:mt-0 flex items-center gap-4">
-            <span className="text-sm font-semibold">Welcome {guestName},</span>
-            <Button
-              className="text-sm border border-white text-white px-4 py-2 rounded hover:bg-white hover:text-blue-800 transition"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <GuestHeader guestName={guestName} onLogout={handleLogout} />
 
       {/* Elegant Main */}
       <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -462,7 +449,11 @@ const GuestHome: React.FC = () => {
               </Button>
             </>
           )}
-          {/* Link Sharing Popup */}
+          {formError && (
+            <div className="text-red-600 bg-red-100 p-3 rounded text-sm font-medium">
+              {formError}
+            </div>
+          )}
 
           <Button className="w-full bg-green-700 hover:bg-green-800 mt-6" onClick={handleSubmit} disabled={submitting}>
             {submitting ? (
@@ -490,7 +481,6 @@ const GuestHome: React.FC = () => {
               onClick={() => {
                 if (latestExamLink) {
                   navigator.clipboard.writeText(latestExamLink);
-                  alert('Link copied to clipboard!');
                 }
               }}
             >
