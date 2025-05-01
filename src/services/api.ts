@@ -1,11 +1,10 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL + '/api',
-  withCredentials: true, // If you're using cookies (optional)
+  baseURL: process.env.REACT_APP_API_BASE_URL || '/api', // /api works locally with proxy
+  withCredentials: true,
 });
 
-// Add JWT token to all requests
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {

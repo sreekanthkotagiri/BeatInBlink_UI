@@ -25,6 +25,8 @@ export type ExamsWithQuestion = {
   scheduled_date: string;
   pass_percentage: number;
   duration_min?: number;
+  enable_time_limit: boolean;
+  restrict_access: boolean;
   correctAnswer?: string;
   marks?: number;
   enabled: boolean;

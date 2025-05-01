@@ -35,14 +35,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedRole = localStorage.getItem('role') as 'student' | 'institute' | null;
     const storedToken = localStorage.getItem('token');
-    console.log('🔁 Checking localStorage for auth:', { storedRole, storedToken });
   
     if (storedRole) {
       const userData = localStorage.getItem(storedRole);
       if (userData) {
         try {
           const parsedUser = JSON.parse(userData);
-          console.log('✅ Restored user from storage:', parsedUser);
           setAuthState({
             student: storedRole === 'student' ? parsedUser : null,
             institute: storedRole === 'institute' ? parsedUser : null,
@@ -58,7 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (userData: User, token: string) => {
-    console.log('🔐 login() called with:', userData);
     localStorage.setItem('token', token);
     localStorage.setItem('role', userData.role);
     localStorage.setItem(userData.role, JSON.stringify(userData)); // ✅ this is key

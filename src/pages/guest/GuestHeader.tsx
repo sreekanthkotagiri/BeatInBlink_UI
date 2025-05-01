@@ -3,7 +3,7 @@ import { Button } from '../../components/ui/input';
 
 interface GuestHeaderProps {
   guestName: string;
-  onLogout: () => void;
+  onLogout?: () => void;
 }
 
 const GuestHeader: React.FC<GuestHeaderProps> = ({ guestName, onLogout }) => {
@@ -26,12 +26,14 @@ const GuestHeader: React.FC<GuestHeaderProps> = ({ guestName, onLogout }) => {
             👋 Hello, <span className="font-semibold text-green-700">{guestName}</span>
           </span>
 
-          <Button
-            onClick={onLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm shadow-sm transition-all"
-          >
-            Logout
-          </Button>
+          {onLogout && (
+            <Button
+              onClick={onLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm shadow-sm transition-all"
+            >
+              Logout
+            </Button>
+          )}
         </nav>
       </div>
     </header>

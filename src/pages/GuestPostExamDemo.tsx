@@ -83,7 +83,6 @@ const GuestCreateExamDrawer: React.FC<DrawerProps> = ({ onClose }) => {
     };
 
     try {
-      console.log('Guest payload:', JSON.stringify(payload));
       await API.post('/auth/guest/create-exam', payload);
       alert('Demo exam created successfully!');
       onClose();

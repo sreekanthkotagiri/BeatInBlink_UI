@@ -109,7 +109,6 @@ const ManageStudentAccessPage: React.FC = () => {
     }
 
     try {
-      console.log('✅ Sending to backend:', JSON.stringify(toggledStudent));
       await API.post('/auth/student/updateStudent', toggledStudent);
     } catch (error) {
       console.error('❌ Error syncing toggle with backend:', error);

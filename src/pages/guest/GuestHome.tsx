@@ -1,70 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Textarea } from '../../components/ui/input';
-import { Drawer } from '../../components/ui/Drawer';
+import { Button } from '../../components/ui/input';
 import API from '../../services/api';
-import MultipleChoiceQuestion from '../../components/ui/questions/MultipleChoiceQuestion';
-import RadioButtonQuestion from '../../components/ui/questions/RadioButtonQuestion';
-import TrueFalseQuestion from '../../components/ui/questions/TrueFalseQuestion';
-import ShortAnswerQuestion from '../../components/ui/questions/ShortAnswerQuestion';
-import QuestionForm from '../../lib/validateQuestions ';
-import { isValidType } from '../../utils/utils';
 import Spinner from '../../components/ui/Spinner';
 import GuestHeader from './GuestHeader';
-
-
-type QuestionType = 'multiplechoice' | 'truefalse' | 'shortanswer' | 'radiobutton';
-
-interface Question {
-  type: QuestionType;
-  text: string;
-  options?: string[];
-  correctAnswer: string;
-  marks: number;
-}
-
-interface Exam {
-  id: string;
-  title: string;
-  scheduled_date: string;
-  duration_min: number;
-  pass_percentage: number;
-  exam_link?: string;
-}
-
-interface StudentResult {
-  id: string;
-  student_name: string;
-  exam_title: string;
-  score: number;
-  submitted_at: string;
-}
+import CreateExamDrawer from './CreateExamDrawer';
 
 const GuestHome: React.FC = () => {
   const navigate = useNavigate();
   const [guestName, setGuestName] = useState('');
   const [guestCode, setGuestCode] = useState('');
   const [showDrawer, setShowDrawer] = useState(false);
-  const [exams, setExams] = useState<Exam[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
-  const [durationMin, setDurationMin] = useState<number>(0);
-  const [passPercentage, setPassPercentage] = useState<number>(0);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [studentResults, setStudentResults] = useState<StudentResult[]>([]);
+  const [durationMin, setDurationMin] = useState<number>(60);
+  const [passPercentage, setPassPercentage] = useState<number>(35);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [questionMode, setQuestionMode] = useState<'manual' | 'upload' | null>(null);
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [enableTimeLimit, setEnableTimeLimit] = useState(false);
+  const [restrictAccess, setRestrictAccess] = useState(false);
+  const [studentResults, setStudentResults] = useState<any[]>([]);
   const [latestExamLink, setLatestExamLink] = useState<string | null>(null);
   const [showLinkPopup, setShowLinkPopup] = useState(false);
-  const [questionMode, setQuestionMode] = useState<'manual' | 'upload' | null>(null);
   const [loadingExams, setLoadingExams] = useState(false);
   const [loadingResults, setLoadingResults] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
 
   useEffect(() => {
+    // Set default date to tomorrow at 10am
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    const isoString = tomorrow.toISOString().slice(0, 16);
+    setScheduledDate(isoString);
     const storedGuestName = localStorage.getItem('guestName');
     const storedGuestCode = localStorage.getItem('guestCode');
-
     if (!storedGuestName || !storedGuestCode) {
       navigate('/');
     } else {
@@ -77,13 +50,10 @@ const GuestHome: React.FC = () => {
 
   const fetchGuestExams = async (code: string) => {
     try {
-      const response = await API.get(`/auth/guest/getAllExam?guestId=${code}`);
-      if (response.data?.exams) {
-        setExams(response.data.exams);
-      }
-      setFormError('');
-    } catch (error) {
-      console.error('Error fetching guest exams:', error);
+      const res = await API.get(`/auth/guest/getAllExam?guestId=${code}`);
+      if (res.data?.exams) setExams(res.data.exams);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingExams(false);
     }
@@ -91,76 +61,54 @@ const GuestHome: React.FC = () => {
 
   const fetchStudentResults = async (code: string) => {
     try {
-      const response = await API.get(`/auth/guest/getAllResults?guestCode=${code}`);
-      if (response.data?.results) {
-        setStudentResults(response.data.results);
-      }
-      setFormError('');
-    } catch (error) {
-      console.error('Error fetching student results:', error);
+      const res = await API.get(`/auth/guest/getAllResults?guestCode=${code}`);
+      if (res.data?.results) setStudentResults(res.data.results);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingResults(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('guestCode');
     localStorage.removeItem('guestName');
+    localStorage.removeItem('guestCode');
     navigate('/');
   };
 
   const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      { type: 'multiplechoice', text: '', options: ['', '', '', ''], correctAnswer: '', marks: 1 },
-    ]);
+    setQuestions([...questions, { type: 'multiplechoice', text: '', options: ['', '', '', ''], correctAnswer: '', marks: 1 }]);
   };
 
-  const updateQuestion = (index: number, updatedQuestion: Question) => {
+  const updateQuestion = (index: number, updated: any) => {
     const updatedQuestions = [...questions];
-    updatedQuestions[index] = updatedQuestion;
+    updatedQuestions[index] = updated;
     setQuestions(updatedQuestions);
   };
 
-  const handleAddOption = (index: number) => {
-    const updatedQuestions = [...questions];
-    if (!updatedQuestions[index].options) {
-      updatedQuestions[index].options = [];
-    }
-    updatedQuestions[index].options!.push('');
-    setQuestions(updatedQuestions);
+  const handleDeleteOption = (qIdx: number, optIdx: number) => {
+    const updated = [...questions];
+    updated[qIdx].options.splice(optIdx, 1);
+    setQuestions(updated);
   };
 
-  const handleDeleteOption = (questionIndex: number, optionIndex: number) => {
-    const updatedQuestions = [...questions];
-    if (updatedQuestions[questionIndex].options) {
-      updatedQuestions[questionIndex].options!.splice(optionIndex, 1);
-    }
-    setQuestions(updatedQuestions);
+  const handleAddOption = (qIdx: number) => {
+    const updated = [...questions];
+    updated[qIdx].options.push('');
+    setQuestions(updated);
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
-
-    if (!title || !description || !scheduledDate || durationMin <= 0 || passPercentage <= 0) {
-      setFormError('Please fill all exam details correctly.');
+    if (!title || !scheduledDate || passPercentage <= 0 || questions.length === 0) {
+      setFormError('Please fill all exam details correctly and add at least one question.');
       setSubmitting(false);
       return;
     }
-
-    if (questions.length === 0) {
-      setFormError('Please add at least one question.');
-      setSubmitting(false);
+    if (enableTimeLimit && durationMin <= 0) {
+      setFormError('Please enter a valid duration since time limit is enabled.');
       return;
     }
-
-    const formattedQuestions = questions.map((q) => ({
-      question: q.text,
-      type: q.type,
-      choices: q.options || [],
-      correctAnswer: q.correctAnswer,
-      marks: q.marks || 1,
-    }));
 
     const payload = {
       guestId: guestCode,
@@ -170,17 +118,22 @@ const GuestHome: React.FC = () => {
       duration_min: durationMin,
       pass_percentage: passPercentage,
       created_by: guestCode,
-      questions: formattedQuestions,
+      questions: questions.map((q) => ({
+        question: q.text,
+        type: q.type,
+        choices: q.options || [],
+        correctAnswer: q.correctAnswer,
+        marks: q.marks || 1,
+      })),
+      enableTimeLimit,
+      restrictAccess,
     };
 
     try {
-      const response = await API.post(`/auth/guest/createExam`, payload);
-      if (response.data?.examId) {
-        const examLink = `${process.env.REACT_APP_API_BASE_URL}/guest-exam/${response.data.examId}`;
-        setLatestExamLink(examLink);
+      const res = await API.post('/auth/guest/createExam', payload);
+      if (res.data?.examId) {
+        setLatestExamLink(`${window.location.origin}/guest-exam/${res.data.examId}`);
         setShowLinkPopup(true);
-
-        // Delay closing drawer so popup stays in view
         setTimeout(() => {
           setShowDrawer(false);
           resetForm();
@@ -188,61 +141,44 @@ const GuestHome: React.FC = () => {
         }, 500);
         setFormError('');
       }
-    } catch (error) {
-      console.error('Error creating guest exam:', error);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
   };
 
-
   const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setScheduledDate('');
-    setDurationMin(0);
-    setPassPercentage(0);
+    setTitle('Testing');
+    setDescription('Testing');
+    setDurationMin(60);
+    setPassPercentage(35);
     setQuestions([]);
+    setEnableTimeLimit(false);
+    setRestrictAccess(false);
   };
 
   return (
-    <div className="min-h-screen bg-white">
-
-      {/* Elegant Header */}
+    <>
       <GuestHeader guestName={guestName} onLogout={handleLogout} />
-
-      {/* Elegant Main */}
       <div className="p-8 max-w-7xl mx-auto space-y-8">
-
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-4">
           <h2 className="text-3xl font-bold text-blue-800">Welcome, {guestName}!</h2>
           <p className="text-gray-600">Create your own exams easily and share them!</p>
-
-          <div className="text-sm text-red-600 font-medium">
-            ⚠️ If you logout, your exams and results will be lost permanently.
-          </div>
-          <div className="text-sm text-blue-600 font-medium">
-            🔒 Guest users have limited access. Create a full account for more features!
-          </div>
-
-          <Button
-            className="bg-yellow-400 hover:bg-yellow-300 text-blue-800 font-semibold px-6 py-3 rounded shadow-md mt-4"
-            onClick={() => setShowDrawer(true)}
-          >
+          <div className="text-sm text-red-600 font-medium">⚠️ If you logout, your exams and results will be lost permanently.</div>
+          <div className="text-sm text-blue-600 font-medium">🔒 Guest users have limited access. Create a full account for more features!</div>
+          <Button className="bg-yellow-400 hover:bg-yellow-300 text-blue-800 font-semibold px-6 py-3 rounded shadow-md mt-4" onClick={() => setShowDrawer(true)}>
             Create Exam
           </Button>
         </div>
 
-        {/* Info Card */}
         <div className="bg-blue-100 text-blue-800 p-4 rounded-lg shadow mb-6">
           Exams will automatically expire after 24 hours. Share links quickly with your students!
         </div>
 
-        {/* Created Exams Table */}
         <div className="bg-gray-50 rounded-2xl shadow-md p-6">
           <h3 className="text-2xl font-bold mb-4 text-blue-700">Your Created Exams</h3>
           {loadingExams ? (<Spinner />) : exams.length > 0 ? (
-
             <table className="min-w-full bg-white divide-y divide-gray-200">
               <thead>
                 <tr className="bg-gray-200 text-gray-700">
@@ -262,12 +198,7 @@ const GuestHome: React.FC = () => {
                     <td className="py-2 px-4 border">{exam.pass_percentage}%</td>
                     <td className="py-2 px-4 border">
                       {exam.exam_link ? (
-                        <Button
-                          className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1"
-                          onClick={() => {
-                            navigator.clipboard.writeText(exam.exam_link || '');
-                          }}
-                        >
+                        <Button className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1" onClick={() => navigator.clipboard.writeText(exam.exam_link || '')}>
                           Copy Link
                         </Button>
                       ) : (
@@ -283,7 +214,6 @@ const GuestHome: React.FC = () => {
           )}
         </div>
 
-        {/* Student Results */}
         <div className="bg-gray-50 rounded-2xl shadow-md p-6">
           <h3 className="text-2xl font-bold mb-4 text-green-700">Student Submissions</h3>
           {loadingResults ? (<Spinner />) : studentResults.length > 0 ? (
@@ -311,192 +241,40 @@ const GuestHome: React.FC = () => {
             <p className="text-gray-500 text-center py-4">No submissions yet.</p>
           )}
         </div>
-
       </div>
 
-      <Drawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} width="60%">
-        <div className="p-6 space-y-6">
-          <h2 className="text-2xl font-semibold mb-6 text-blue-800">Create Guest Exam</h2>
-
-          <Input
-            type="text"
-            placeholder="Exam Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          <Input
-            type="datetime-local"
-            value={scheduledDate}
-            onChange={(e) => setScheduledDate(e.target.value)}
-          />
-
-          <Textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-
-          <Input
-            type="number"
-            placeholder="Duration (minutes)"
-            value={durationMin}
-            onChange={(e) => setDurationMin(Number(e.target.value))}
-          />
-
-          <Input
-            type="number"
-            placeholder="Pass Percentage"
-            value={passPercentage}
-            onChange={(e) => setPassPercentage(Number(e.target.value))}
-          />
-
-          {questionMode === null && (
-            <div className="flex gap-4 justify-center py-4">
-              <Button onClick={() => setQuestionMode('manual')} className="w-1/2">
-                Create Manually
-              </Button>
-              <Button onClick={() => setQuestionMode('upload')} className="w-1/2">
-                Upload CSV
-              </Button>
-            </div>
-          )}
-
-          {questionMode === 'upload' && (
-            <QuestionForm onUpload={(uploadedQuestions: Question[]) => setQuestions(uploadedQuestions)} />
-          )}
-          {/* Questions Section */}
-          {questionMode === 'manual' && (
-            <>
-              <h3 className="text-xl font-semibold">Questions</h3>
-              <div className="space-y-6">
-                {questions.map((question, index) => (
-                  <div key={index} className="border rounded p-4 mb-6 bg-gray-50 shadow space-y-4">
-                    <select
-                      className="w-full p-2 border rounded"
-                      value={question.type}
-                      onChange={(e) => updateQuestion(index, { ...question, type: e.target.value as QuestionType, options: ['', ''] })}
-                    >
-                      <option value="multiplechoice">Multiple Choice</option>
-                      <option value="radiobutton">Radio Button</option>
-                      <option value="truefalse">True/False</option>
-                      <option value="shortanswer">Short Answer</option>
-                    </select>
-
-                    <div className="mb-3">
-                      <label className="block font-medium mb-1">Marks</label>
-                      <Input
-                        type="number"
-                        placeholder="Enter marks"
-                        className="w-32"
-                        value={question.marks}
-                        onChange={(e) =>
-                          updateQuestion(index, {
-                            ...question,
-                            marks: Number(e.target.value),
-                          })
-                        }
-                      />
-                    </div>
-
-                    <Textarea
-                      className="w-full"
-                      placeholder="Enter your question"
-                      value={question.text}
-                      onChange={(e) => updateQuestion(index, { ...question, text: e.target.value })}
-                    />
-
-                    {isValidType(question.type) === 'multiplechoice' && (
-                      <MultipleChoiceQuestion
-                        question={question}
-                        index={index}
-                        updateQuestion={updateQuestion}
-                        handleDeleteOption={handleDeleteOption}
-                        handleAddOption={handleAddOption}
-                      />
-                    )}
-
-                    {isValidType(question.type) === 'radiobutton' && (
-                      <RadioButtonQuestion
-                        question={question}
-                        index={index}
-                        updateQuestion={updateQuestion}
-                        handleDeleteOption={handleDeleteOption}
-                        handleAddOption={handleAddOption}
-                      />
-                    )}
-
-                    {isValidType(question.type) === 'truefalse' && (
-                      <TrueFalseQuestion
-                        question={question}
-                        index={index}
-                        updateQuestion={updateQuestion}
-                      />
-                    )}
-
-                    {isValidType(question.type) === 'shortanswer' && (
-                      <ShortAnswerQuestion
-                        question={question}
-                        index={index}
-                        updateQuestion={updateQuestion}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Button className="mt-4" onClick={addQuestion}>
-                Add Question
-              </Button>
-            </>
-          )}
-          {formError && (
-            <div className="text-red-600 bg-red-100 p-3 rounded text-sm font-medium">
-              {formError}
-            </div>
-          )}
-
-          <Button className="w-full bg-green-700 hover:bg-green-800 mt-6" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? (
-              <div className="flex justify-center items-center gap-2">
-                <Spinner /> <span>Submitting...</span>
-              </div>
-            ) : (
-              'Submit Exam'
-            )}
-          </Button>
-        </div>
-      </Drawer>
-      {showLinkPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center space-y-6">
-            <h2 className="text-2xl font-bold text-green-700">Exam Created!</h2>
-            <p className="text-gray-600">Share this link with your students:</p>
-
-            <div className="bg-gray-100 p-3 rounded break-words">
-              {latestExamLink}
-            </div>
-
-            <Button
-              className="w-full bg-blue-600 text-white hover:bg-blue-700"
-              onClick={() => {
-                if (latestExamLink) {
-                  navigator.clipboard.writeText(latestExamLink);
-                }
-              }}
-            >
-              Copy Link
-            </Button>
-
-            <Button
-              className="w-full bg-gray-400 text-white hover:bg-gray-500 mt-2"
-              onClick={() => setShowLinkPopup(false)}
-            >
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+      <CreateExamDrawer
+        isOpen={showDrawer}
+        onClose={() => {setShowDrawer(false); resetForm()}}
+        title={title}
+        setTitle={setTitle}
+        scheduledDate={scheduledDate}
+        setScheduledDate={setScheduledDate}
+        description={description}
+        setDescription={setDescription}
+        durationMin={durationMin}
+        setDurationMin={setDurationMin}
+        passPercentage={passPercentage}
+        setPassPercentage={setPassPercentage}
+        questions={questions}
+        setQuestions={setQuestions}
+        questionMode={questionMode}
+        setQuestionMode={setQuestionMode}
+        handleSubmit={handleSubmit}
+        submitting={submitting}
+        formError={formError}
+        addQuestion={addQuestion}
+        updateQuestion={updateQuestion}
+        handleDeleteOption={handleDeleteOption}
+        handleAddOption={handleAddOption}
+        enableTimeLimit={enableTimeLimit}
+        setEnableTimeLimit={setEnableTimeLimit}
+        restrictAccess={restrictAccess}
+        setRestrictAccess={setRestrictAccess}
+        sendTimeLimitToApi={enableTimeLimit}
+        sendCursorLockToApi={restrictAccess}
+      />
+    </>
   );
 };
 

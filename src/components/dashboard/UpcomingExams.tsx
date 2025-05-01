@@ -12,7 +12,6 @@ const UpcomingExams: React.FC<Props> = ({ upcomingExams }) => {
   const [examDetail, setExamDetail] = useState<any>(null);
 
   const handleOpenDrawer = async (examId: number) => {
-    console.log('Opening drawer for exam ID:', examId); // ✅ test
     try {
       const res = await API.get(`/auth/editexam/${examId}`);
       setExamDetail(res.data);

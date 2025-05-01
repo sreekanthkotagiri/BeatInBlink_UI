@@ -28,10 +28,8 @@ const ViewAllExamsPage = () => {
   }, []);
 
   const handleView = async (examId: number) => {
-    console.log('vvvvvvvvvvvvvvvvv  ',)
     try {
       const res = await API.get(`/auth/institute/viewexam/${examId}`);
-      console.log('vvvvvvvvvvvvvvvvv  ', res)
       setSelectedExam(res.data);
       setDrawerMode('view');
     } catch (err) {
@@ -42,7 +40,6 @@ const ViewAllExamsPage = () => {
   const handleEdit = async (examId: number) => {
     try {
       const res = await API.get(`/auth/institute/viewexam/${examId}`);
-      console.log('eeeeeeeeeeeeeeeee  ', res)
       setSelectedExam(res.data);
       setDrawerMode('edit');
     } catch (err) {

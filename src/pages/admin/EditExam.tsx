@@ -145,7 +145,6 @@ const EditExamPage = () => {
       };
 
       if (examId) {
-        console.log('bbbbbbbbbbbbbbbbbbbbb ', JSON.stringify(examData));
         await API.post(`/auth/exams/${examId}`, examData);
         alert('Exam updated successfully!');
       } else {
