@@ -6,7 +6,7 @@ interface Exam {
   status: 'Published' | 'Scheduled';
 }
 
-const RecentExams = ({ exams }: { exams: Exam[] }) => {
+const RecentExams = ({ exams = [] }: { exams?: Exam[] }) => {
   const recent = exams.slice(0, 3);
 
   return (
