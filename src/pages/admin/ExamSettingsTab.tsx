@@ -64,7 +64,7 @@ const ExamSettingsTab: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const res = await API.get(`http://localhost:5000/api/auth/institute/exams?instituteId=${instituteId}`);
+      const res = await API.get(`/auth/institute/exams?instituteId=${instituteId}`);
       setExams(res.data);
     } catch (err) {
       console.error('Failed to load exams:', err);
@@ -73,7 +73,7 @@ const ExamSettingsTab: React.FC = () => {
 
   const toggleStatus = async (examId: number, currentStatus: 'enabled' | 'disabled') => {
     try {
-      await API.post('http://localhost:5000/api/auth/institute/toggle-exam-status', {
+      await API.post('/auth/institute/toggle-exam-status', {
         examId,
         status: currentStatus === 'enabled' ? 'disabled' : 'enabled',
       });
@@ -94,7 +94,7 @@ const ExamSettingsTab: React.FC = () => {
     setEditExamId(exam.id);
     setReadOnlyView(false);
     try {
-      const res = await API.get(`http://localhost:5000/api/auth/institute/viewexam/${exam.id}`);
+      const res = await API.get(`/auth/institute/viewexam/${exam.id}`);
       populateForm(res.data);
       setShowDrawer(true);
     } catch (err) {
@@ -106,7 +106,7 @@ const ExamSettingsTab: React.FC = () => {
     setEditExamId(exam.id);
     setReadOnlyView(true);
     try {
-      const res = await API.get(`http://localhost:5000/api/auth/institute/exams/${exam.id}`);
+      const res = await API.get(`/auth/institute/exams/${exam.id}`);
       populateForm(res.data);
       setShowDrawer(true);
     } catch (err) {
@@ -162,9 +162,9 @@ const ExamSettingsTab: React.FC = () => {
         questions,
       };
       if (editExamId) {
-        await API.put(`http://localhost:5000/api/auth/institute/exams/${editExamId}`, payload);
+        await API.put(`/auth/institute/exams/${editExamId}`, payload);
       } else {
-        await API.post(`http://localhost:5000/api/auth/institute/createExam?instituteId=${instituteId}`, payload);
+        await API.post(`/auth/institute/createExam?instituteId=${instituteId}`, payload);
         alert('Exam created successfully!');
       }
 

@@ -11,7 +11,7 @@ const ForgotPassword: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/forgot-password', {
+      const response = await axios.post('/auth/forgot-password', {
         email,
       });
       setMessage(response.data.message || 'Reset link sent to your email');
