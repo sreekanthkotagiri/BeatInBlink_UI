@@ -3,6 +3,7 @@ import API from '../../services/api';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button } from '../../components/ui/input';
 import { toast, ToastContainer } from 'react-toastify';
+import { Branch } from '../../types/branch';
 
 const AddStudentTab: React.FC = () => {
     const [name, setName] = useState('');
