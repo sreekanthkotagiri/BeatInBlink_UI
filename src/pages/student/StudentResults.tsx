@@ -23,7 +23,7 @@ const StudentResults = () => {
       setInstituteName(student.institute_name);
 
       try {
-        const res = await API.get(`/auth/student/allStudentExams?studentId=${student.id}&submitted=true`);
+        const res = await API.get(`/auth/student/student-results?studentId=${student.id}`);
         const response = Array.isArray(res.data) ? res.data[0] : res.data;
         setExamResults(response.exams || []);
       } catch (err) {

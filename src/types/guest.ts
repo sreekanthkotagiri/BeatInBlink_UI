@@ -1,10 +1,12 @@
 export interface CreateExamDrawerProps {
-    isOpen: boolean;
-    onClose: () => void;
+    isOpen?: boolean;
+    onClose?: () => void;
     title: string;
     setTitle: (value: string) => void;
     scheduledDate: string;
     setScheduledDate: (value: string) => void;
+    expiryDate: string;
+    setExpiryDate: (value: string) => void;
     description: string;
     setDescription: (value: string) => void;
     durationMin: number;
@@ -29,5 +31,6 @@ export interface CreateExamDrawerProps {
     // New fields to pass to API
     sendTimeLimitToApi?: boolean;
     sendCursorLockToApi?: boolean;
+    readOnly?: boolean;
   }
   

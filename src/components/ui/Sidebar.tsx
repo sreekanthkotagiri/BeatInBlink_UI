@@ -22,7 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ enabledTabs }) => {
     { name: 'studentexams', label: 'Exams', path: '/student/exams' },
     { name: 'studentresults', label: 'Results', path: '/student/results' },
     { name: 'studentprofile', label: 'Profile', path: '/student/profile' },
-    { name: 'student-announcements', label: 'Announcements', path: '/student/announcementPage' },
+    { name: 'student-announcements', label: 'Announcements', path: '/student/announcements' },
 
   ];
 

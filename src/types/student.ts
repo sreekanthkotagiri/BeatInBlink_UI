@@ -14,3 +14,11 @@ export type Student = {
     branchId: string;
   };
   
+
+  export interface StudentPayload {
+      name: string;
+      email: string;
+      branch: string;
+      password: string;
+      error?: string;
+  }

@@ -17,6 +17,8 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
   setTitle,
   scheduledDate,
   setScheduledDate,
+  expiryDate,
+  setExpiryDate,
   description,
   setDescription,
   durationMin,
@@ -38,22 +40,60 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
   setEnableTimeLimit,
   restrictAccess,
   setRestrictAccess,
+  readOnly,
 }) => {
   return (
     <div className={`fixed top-0 right-0 w-full max-w-[700px] h-full bg-gradient-to-b from-white to-blue-50 shadow-2xl z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} rounded-l-2xl`}>
       <div className="p-8 space-y-6 overflow-y-auto h-full">
         <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold text-blue-700">Create Guest Exam</h2>
+          <h2 className="text-3xl font-bold text-blue-700">Create Exam</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-black text-3xl">&times;</button>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <Input type="text" placeholder="Exam Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Input type="datetime-local" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
-          <Textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-600 font-medium">Exam Title</label>
+            <Input
+              type="text"
+              placeholder="Exam Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={readOnly}
+            />
+          </div>
 
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-600 font-medium">Scheduled Date</label>
+            <Input
+              type="datetime-local"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              disabled={readOnly}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-600 font-medium">Expiry Date</label>
+            <Input
+              type="datetime-local"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              disabled={readOnly}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-600 font-medium">Description</label>
+            <Textarea
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              disabled={readOnly}
+            />
+          </div>
           <div className="flex items-center gap-3">
-            <input type="checkbox" checked={enableTimeLimit} onChange={(e) => setEnableTimeLimit(e.target.checked)} />
+            <input type="checkbox" checked={enableTimeLimit} onChange={(e) => setEnableTimeLimit(e.target.checked)} disabled={readOnly} />
             <label className="text-sm text-gray-700 font-medium">⏳ Enable Time Limit</label>
           </div>
           {enableTimeLimit && (
@@ -64,7 +104,7 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
                 value={durationMin}
                 onChange={(e) => setDurationMin(Number(e.target.value))}
                 className="px-4 py-2 border rounded-md shadow-inner focus:ring-2 focus:ring-blue-400 outline-none"
-                placeholder="Enter duration in minutes"
+                placeholder="Enter duration in minutes" disabled={readOnly}
               />
             </div>
           )}
@@ -76,19 +116,19 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
               value={passPercentage}
               onChange={(e) => setPassPercentage(Number(e.target.value))}
               className="px-4 py-2 border rounded-md shadow-inner focus:ring-2 focus:ring-blue-400 outline-none"
-              placeholder="Enter pass percentage"
+              placeholder="Enter pass percentage" disabled={readOnly}
             />
           </div>
 
           <div className="flex items-center gap-3">
-            <input type="checkbox" checked={restrictAccess} onChange={(e) => setRestrictAccess(e.target.checked)} />
-            <label className="text-sm text-gray-700 font-medium">🛡️ Restrict external window switch / cursor movement</label>
+            <input type="checkbox" checked={restrictAccess} onChange={(e) => setRestrictAccess(e.target.checked)} disabled={readOnly} />
+            <label className="text-sm text-gray-700 font-medium">🛡️ Restrict external window switch / cursor movement / Block keyboard shortcuts</label>
           </div>
 
           {questionMode === null && (
             <div className="flex gap-4 py-4">
-              <Button onClick={() => setQuestionMode('manual')} className="w-1/2">📝 Create Manually</Button>
-              <Button onClick={() => setQuestionMode('upload')} className="w-1/2">📂 Upload CSV</Button>
+              <Button onClick={() => setQuestionMode('manual')} className="w-1/2" disabled={readOnly}>📝 Create Manually</Button>
+              <Button onClick={() => setQuestionMode('upload')} className="w-1/2" disabled={readOnly}>📂 Upload CSV</Button>
             </div>
           )}
 
@@ -100,17 +140,17 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
               <div className="space-y-6">
                 {questions.map((question, index) => (
                   <div key={index} className="border rounded-xl p-4 mb-6 bg-white shadow-md space-y-4">
-                    <select className="w-full p-2 border rounded" value={question.type} onChange={(e) => updateQuestion(index, { ...question, type: e.target.value, options: ['', ''] })}>
-                      <option value="multiplechoice">Multiple Choice</option>
+                    <select disabled={readOnly} className="w-full p-2 border rounded" value={question.type} onChange={(e) => updateQuestion(index, { ...question, type: e.target.value, options: ['', ''] })}>
+                      <option value="multiplechoice" >Multiple Choice</option>
                       <option value="radiobutton">Radio Button</option>
                       <option value="truefalse">True/False</option>
                       <option value="shortanswer">Short Answer</option>
                     </select>
 
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-gray-700">Marks</label>
+                      <label className="text-sm font-medium text-gray-700" >Marks</label>
                       <input
-                        type="number"
+                        type="number" disabled={readOnly}
                         value={question.marks}
                         onChange={(e) => updateQuestion(index, { ...question, marks: Number(e.target.value) })}
                         className="px-4 py-2 border rounded-md shadow-inner focus:ring-2 focus:ring-blue-400 outline-none w-32"
@@ -122,7 +162,7 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
                       className="w-full"
                       placeholder="Enter your question"
                       value={question.text}
-                      onChange={(e) => updateQuestion(index, { ...question, text: e.target.value })}
+                      onChange={(e) => updateQuestion(index, { ...question, text: e.target.value })} disabled={readOnly}
                     />
 
                     {isValidType(question.type) === 'multiplechoice' && (
@@ -143,23 +183,23 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
                   </div>
                 ))}
               </div>
-              <Button className="mt-4" onClick={addQuestion}>➕ Add Question</Button>
+              <Button className="mt-4" onClick={addQuestion} disabled={readOnly}>➕ Add Question</Button>
             </>
           )}
 
           {formError && (
             <div className="text-red-600 bg-red-100 p-3 rounded text-sm font-medium">{formError}</div>
           )}
-
-          <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 mt-6 shadow-md" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? (
-              <div className="flex justify-center items-center gap-2">
-                <Spinner /> <span>Submitting...</span>
-              </div>
-            ) : (
-              '🚀 Submit Exam'
-            )}
-          </Button>
+          {!readOnly && (
+            <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 mt-6 shadow-md" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? (
+                <div className="flex justify-center items-center gap-2">
+                  <Spinner /> <span>Submitting...</span>
+                </div>
+              ) : (
+                '🚀 Submit Exam'
+              )}
+            </Button>)}
         </div>
       </div>
     </div>

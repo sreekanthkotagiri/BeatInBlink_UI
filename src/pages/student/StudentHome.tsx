@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../App.css';
 import API from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,12 +9,10 @@ import Sidebar from '../../components/ui/Sidebar';
 const StudentHomePage = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-
+  const [enabledExams, setEnabledExams] = useState<any[]>([]);
   const {
     studentName,
     setStudentName,
-    enabledexams,
-    setEnabledExams,
     studentdetails,
     setSubmissionStats
   } = useStudentContext();
@@ -31,24 +29,45 @@ const StudentHomePage = () => {
         console.error('No student ID found');
         return;
       }
+
       setStudentName(user.name);
 
       try {
-        const res = await API.get(`/auth/students?studentId=${user.id}`);
-        const { enabledexams, studentdetails } = res.data[0] || { enabledexams: [], studentdetails: {} };
-        setEnabledExams(enabledexams);
-        setSubmissionStats(studentdetails);
+        // Step 1: Fetch student profile
+        const profileRes = await API.get(`/auth/student/profile?studentId=${user.id}`);
+        const profile = profileRes.data;
+        setSubmissionStats({
+          studentId: profile.studentId,
+          studentName: profile.studentName,
+          instituteName: profile.instituteName,
+          totalExams: profile.totalExams,
+          submitted: profile.submitted,
+          pending: profile.pending,
+        });
+
+        // Step 2: Fetch exam summary to get submission stats
+        const statsRes = await API.get(`/auth/student/exams?studentId=${user.id}&examStatus=submitted`);
+        const closed = statsRes.data.exams.length;
+
+        const pendingRes = await API.get(`/auth/student/exams?studentId=${user.id}&examStatus=pending`);
+        const pending = pendingRes.data.exams.length;
+
+
+
+        // Step 3: Fetch enabled exams (i.e. pending)
+        setEnabledExams(pendingRes.data.exams || []);
       } catch (err) {
         console.error('Failed to fetch student dashboard:', err);
       }
     };
+
     fetchStudentDashboard();
   }, [setStudentName, setEnabledExams, setSubmissionStats]);
 
   return (
     <div className="bg-gray-50 min-h-screen w-full">
       <div className="flex">
-        <Sidebar enabledTabs={['studenthome','studentexams', 'studentresults', 'studentprofile','student-announcements']} />
+        <Sidebar enabledTabs={['studenthome', 'studentexams', 'studentresults', 'studentprofile', 'student-announcements']} />
 
         <main className="flex-1 px-8 py-6">
           <div className="mb-6">
@@ -70,9 +89,9 @@ const StudentHomePage = () => {
             </div>
           </div>
 
-          <div className="mb-10">
+          <div className="mb-10 px-4 md:px-8">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Enabled Exams</h3>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                   <tr>
@@ -84,21 +103,28 @@ const StudentHomePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {enabledexams && enabledexams.length > 0 ? (
-                    enabledexams.map((exam: any) => (
-                      <tr key={exam.id} className="border-t border-gray-100 hover:bg-gray-50">
+                  {Array.isArray(enabledExams) && enabledExams.length > 0 ? (
+                    enabledExams.map((exam: any) => (
+                      <tr key={exam.exam_id} className="border-t border-gray-100 hover:bg-gray-50">
                         <td className="px-4 py-3">{exam.exam_id}</td>
                         <td className="px-4 py-3">{exam.title}</td>
                         <td className="px-4 py-3">{new Date(exam.scheduled_date).toLocaleString()}</td>
                         <td className="px-4 py-3">{exam.duration_min} mins</td>
                         <td className="px-4 py-3">
-                          <Link to={`/student/submitExam/${exam.exam_id}`} className="text-blue-600 underline hover:text-blue-800">Start</Link>
+                          <Link
+                            to={`/student/submitExam/${exam.exam_id}`}
+                            className="text-blue-600 underline hover:text-blue-800"
+                          >
+                            Start
+                          </Link>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No exams enabled</td>
+                      <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                        No exams enabled
+                      </td>
                     </tr>
                   )}
                 </tbody>

@@ -1,99 +1,146 @@
+// Moved All Results tab into a separate component for modularity
 import React, { useEffect, useState } from 'react';
 import '../../App.css';
 import API from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './../../context/AuthContext';
 import Sidebar from '../../components/ui/Sidebar';
-
+import TopPerformersTab from './TopPerformersTab';
+import StudentWiseReportTab from './StudentWiseReportTab';
+import ExamSummaryTab from './ExamSummaryTab';
+import AllResultsTab from './AllResultsTab';
+import { Result } from '../../types/results';
 
 const InstituteResultsPage = () => {
-  type Results ={
-    examid: number,
-    examtitle: string,
-    studentname: string,
-    branch: string
-    score: string,
-    status: string
-  }
+  
+
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [results, setResults] = useState<Results[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [instituteName, setInstituteName] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [branchList, setBranchList] = useState<string[]>([]);
+  const [examList, setExamList] = useState<string[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [selectedExam, setSelectedExam] = useState('');
+  const [instituteId, setInstituteId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const [activeTab, setActiveTab] = useState<'all' | 'top' | 'student' | 'summary'>('all');
 
   useEffect(() => {
-    const fetchResults = async () => {
-      const storedInstitute = localStorage.getItem('institute');
-      const institute = storedInstitute ? JSON.parse(storedInstitute) : null;
-      setInstituteName(institute?.name || '');
-      if (!institute || !institute.id) return;
+    const storedInstitute = localStorage.getItem('institute');
+    const institute = storedInstitute ? JSON.parse(storedInstitute) : null;
+    if (institute?.id) {
+      setInstituteName(institute.name || '');
+      setInstituteId(institute.id);
+      fetchResults(institute.id, page);
+    }
+  }, [page]);
 
-      try {
-        const results = await API.get(`/auth/results?instituteId=${institute.id}`);
-        setResults(results.data);
-      } catch (err) {
-        console.error('Failed to fetch results:', err);
-      }
-    };
+  const fetchResults = async (instituteId: number, currentPage: number) => {
+    try {
+      const params = new URLSearchParams({
+        instituteId: instituteId.toString(),
+        page: currentPage.toString(),
+        limit: limit.toString(),
+        search: searchTerm,
+        branch: selectedBranch,
+        examTitle: selectedExam
+      });
 
-    fetchResults();
-  }, []);
+      const response = await API.get(`/auth/institute/allResults?${params.toString()}`);
+      const data = response.data;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('institute');
-    logout();
-    navigate('/login');
+      setResults(data.results || []);
+      setTotalCount(data.totalCount || 0);
+
+      const uniqueBranches = [...new Set(data.results.map((r: Result) => r.branch))] as string[];
+      const uniqueExams = [...new Set(data.results.map((r: Result) => r.examtitle))] as string[];
+
+      setBranchList(uniqueBranches);
+      setExamList(uniqueExams);
+    } catch (err) {
+      console.error('Failed to fetch results:', err);
+    }
+  };
+
+  const applyFilters = () => {
+    const storedInstitute = localStorage.getItem('institute');
+    const institute = storedInstitute ? JSON.parse(storedInstitute) : null;
+    if (institute?.id) {
+      setPage(1);
+      fetchResults(institute.id, 1);
+    }
   };
 
   return (
-    <div className="institute-home">
-
+    <div className="institute-home bg-gradient-to-br from-blue-50 to-white min-h-screen">
       <div className="dashboard-container">
+        <Sidebar enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']} />
 
-      <Sidebar
-          enabledTabs={[
-            'dashboard',
-            'manageStudents',
-            'manageExams',
-            'results',
-            'announcements',
-          ]}
-        />
+        <main className="main-content p-8">
+          <div className="bg-white p-8 rounded-2xl shadow-xl">
+            {/* Horizontal Tabs */}
+            <div className="flex gap-6 mb-6 border-b">
+              {['all', 'top', 'student', 'summary'].map((tab) => (
+                <button
+                  key={tab}
+                  className={`pb-2 border-b-4 capitalize ${activeTab === tab
+                    ? 'border-blue-600 text-blue-800 font-semibold'
+                    : 'border-transparent text-gray-600'
+                    }`}
+                  onClick={() => setActiveTab(tab as any)}
+                >
+                  {tab === 'all' && 'All Results'}
+                  {tab === 'top' && 'Top Performers'}
+                  {tab === 'student' && 'Student-wise Report'}
+                  {tab === 'summary' && 'Exam-wise Summary'}
+                </button>
+              ))}
+            </div>
 
-        <main className="main-content">
-          <h2>Exam Results</h2>
-
-          <table className="w-full border mt-4">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="p-2 border">Exam ID</th>
-                <th className="p-2 border">Exam Title</th>
-                <th className="p-2 border">Student Name</th>
-                <th className="p-2 border">Branch</th>
-                <th className="p-2 border">Score</th>
-                <th className="p-2 border">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.length > 0 ? (
-                results.map((res, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="p-2 border">{res.examid}</td>
-                    <td className="p-2 border">{res.examtitle}</td>
-                    <td className="p-2 border">{res.studentname}</td>
-                    <td className="p-2 border">{res.branch}</td>
-                    <td className="p-2 border">{res.score}</td>
-                    <td className="p-2 border">{res.status}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="p-2 text-center">No results available</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            {activeTab === 'top' && (
+              <TopPerformersTab
+                examList={examList}
+                branchList={branchList}
+                instituteId={instituteId}
+              />
+            )}
+            {activeTab === 'student' && (
+              <StudentWiseReportTab
+                branchList={branchList}
+                examList={examList}
+                instituteId={instituteId}
+              />
+            )}
+            {activeTab === 'summary' && (
+              <ExamSummaryTab
+                examList={examList}
+                branchList={branchList}
+                instituteId={instituteId}
+              />
+            )}
+            {activeTab === 'all' && (
+              <AllResultsTab
+                results={results}
+                totalCount={totalCount}
+                searchTerm={searchTerm}
+                selectedBranch={selectedBranch}
+                selectedExam={selectedExam}
+                branchList={branchList}
+                examList={examList}
+                page={page}
+                setPage={setPage}
+                applyFilters={applyFilters}
+                setSearchTerm={setSearchTerm}
+                setSelectedBranch={setSelectedBranch}
+                setSelectedExam={setSelectedExam}
+              />
+            )}
+          </div>
         </main>
       </div>
     </div>

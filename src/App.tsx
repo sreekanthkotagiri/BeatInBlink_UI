@@ -8,11 +8,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
-import ManageExams from './pages/admin/ManageExams';
 import InstituteHomePage from './pages/admin/InstituteHomePage';
 import Results from './pages/admin/Results';
-import CreateExamPage from './pages/admin/CreateExam';
-import EditExamPage from './pages/admin/EditExam';
 import ManageStudentAccessPage from './pages/admin/ManageStudentAccess';
 import StudentHome from './pages/student/StudentHome';
 import StudentExams from './pages/student/StudentExams';
@@ -21,12 +18,13 @@ import StudentResults from './pages/student/StudentResults';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedLayout from './layouts/RoleBasedLayout';
 import AnnouncementPage from './pages/admin/AnnouncementPage';
-import ManageExamsLayout from './pages/admin/ManageExams';
 import StudentProfilePage from './pages/student/Profile';
 import StudentTakeExamPage from './pages/student/submitExam';
 import SampleTestPage from './pages/SampleTestPage';
 import GuestHome from './pages/guest/GuestHome';
 import GuestExamPage from './pages/guest/GuestExamPage';
+import ManageExamsPage from './pages/admin/ManageExamsPage';
+import Announcement from './pages/student/Announcement';
 
 
 const App: React.FC = () => {
@@ -51,11 +49,8 @@ const App: React.FC = () => {
                 <RoleBasedLayout>
                   <Routes>
                     <Route path="home" element={<InstituteHomePage />} />
-                    <Route path="exams" element={<ManageExams />} />
                     <Route path="results" element={<Results />} />
-                    <Route path="createExam" element={<CreateExamPage />} />
-                    <Route path="edit-exam/:examId" element={<EditExamPage />} />
-                    <Route path="manage-exams" element={<ManageExamsLayout />} />
+                    <Route path="manage-exams" element={<ManageExamsPage />} />
                     <Route path="managestudent" element={<ManageStudentAccessPage />} />
                     <Route path="announcementPage" element={<AnnouncementPage />} />
                   </Routes>
@@ -77,6 +72,7 @@ const App: React.FC = () => {
                       <Route path="results" element={<StudentResults />} />
                       <Route path="submitExam/:examId" element={<StudentTakeExamPage />} />
                       <Route path="profile" element={<StudentProfilePage />} />
+                      <Route path="announcements" element={<Announcement/>} />
                     </Routes>
                   </StudentProvider>
                 </RoleBasedLayout>

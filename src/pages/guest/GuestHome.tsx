@@ -15,6 +15,7 @@ const GuestHome: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [durationMin, setDurationMin] = useState<number>(60);
   const [passPercentage, setPassPercentage] = useState<number>(35);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -194,7 +195,9 @@ const GuestHome: React.FC = () => {
                   <tr key={exam.id} className="hover:bg-gray-100 transition text-center">
                     <td className="py-2 px-4 border">{exam.title}</td>
                     <td className="py-2 px-4 border">{new Date(exam.scheduled_date).toLocaleString()}</td>
-                    <td className="py-2 px-4 border">{exam.duration_min} min</td>
+                    <td className="py-2 px-4 border">
+                      {exam.duration_min != null ? `${exam.duration_min} min` : 'NA'}
+                    </td>
                     <td className="py-2 px-4 border">{exam.pass_percentage}%</td>
                     <td className="py-2 px-4 border">
                       {exam.exam_link ? (
@@ -245,11 +248,13 @@ const GuestHome: React.FC = () => {
 
       <CreateExamDrawer
         isOpen={showDrawer}
-        onClose={() => {setShowDrawer(false); resetForm()}}
+        onClose={() => { setShowDrawer(false); resetForm() }}
         title={title}
         setTitle={setTitle}
         scheduledDate={scheduledDate}
         setScheduledDate={setScheduledDate}
+        expiryDate={expiryDate}
+        setExpiryDate={setExpiryDate}
         description={description}
         setDescription={setDescription}
         durationMin={durationMin}

@@ -2,25 +2,27 @@ import { useEffect, useState } from 'react';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Exam } from '../types/exam';
-import { Alert, Submission } from '../types/dashboard';
 
 export const useInstituteDashboard = () => {
   const [dashboard, setDashboard] = useState({
-    studentsCount: 0,
-    examsCount: 0,
-    submissionsCount: 0,
-    upcomingExams: [] as Exam[],
-    recentSubmissions: [] as Submission[],
-    systemAlerts: [] as Alert[],
+    totalStudents: 0,
+    totalExams: 0,
+    examsEnabled: 0,
+    examsToday: 0,
+    recentExams: []
   });
 
   const { authState, logout, isAuthenticated, isAuthInitialized } = useAuth();
   const navigate = useNavigate();
-  const instituteUser = authState.institute;
 
   useEffect(() => {
-    if (!isAuthInitialized || !instituteUser) return;
+    if (!isAuthInitialized) return;
+    const storedInstitute = localStorage.getItem('institute');
+    const institute = storedInstitute ? JSON.parse(storedInstitute) : null;
+    if (!institute || !institute.id) {
+      console.error('No institute ID found');
+      return;
+    }
 
     const fetchDashboard = async () => {
       if (!isAuthenticated || authState.currentRole !== 'institute') {
@@ -30,14 +32,13 @@ export const useInstituteDashboard = () => {
       }
 
       try {
-        const res = await API.get(`/auth/institute?instituteId=${instituteUser.id}`);
+        const res = await API.get(`/auth/institute?instituteId=${institute.id}`);
         setDashboard({
-          studentsCount: res.data.studentsCount || 0,
-          examsCount: res.data.examsCount || 0,
-          submissionsCount: res.data.submissionsCount || 0,
-          upcomingExams: res.data.upcomingExams || [],
-          recentSubmissions: res.data.recentSubmissions || [],
-          systemAlerts: res.data.systemAlerts || [],
+          totalStudents: res.data.totalStudents || 0,
+          totalExams: res.data.totalExams || 0,
+          examsEnabled: res.data.examsEnabled || 0,
+          examsToday: res.data.examsToday || 0,
+          recentExams: res.data.recentExams,
         });
       } catch (err) {
         console.error('Failed to fetch dashboard:', err);
@@ -45,7 +46,7 @@ export const useInstituteDashboard = () => {
     };
 
     fetchDashboard();
-  }, [authState, isAuthenticated, isAuthInitialized, logout, navigate, instituteUser]);
+  }, [authState, isAuthenticated, isAuthInitialized, logout, navigate]);
 
   return dashboard;
 };

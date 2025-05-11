@@ -66,19 +66,45 @@ const GuestExamPage: React.FC = () => {
       return () => document.removeEventListener('contextmenu', handleContextMenu);
     }
   }, [exam?.enable_time_limit]);
+  
 
   useEffect(() => {
-    if (exam?.restrict_access) {
-      const handleVisibilityChange = () => {
-        if (document.hidden) {
-          setErrorMessage('Window switching is not allowed during this exam.');
-          setShowErrorModal(true);
-        }
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }
+    if (!exam?.restrict_access) return;
+  
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setErrorMessage('Window switching is not allowed during this exam.');
+        setShowErrorModal(true);
+      }
+    };
+  
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      setErrorMessage('Copying content is not allowed during the exam.');
+      setShowErrorModal(true);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && ['c', 'x', 'u', 's', 'p'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        setErrorMessage('Certain keyboard shortcuts are disabled during the exam.');
+        setShowErrorModal(true);
+      }
+    };
+  
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('keydown', handleKeyDown);
+  
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [exam?.restrict_access]);
+  
 
   useEffect(() => {
     if (!exam?.enable_time_limit || remainingTime <= 0 || submitted) return;

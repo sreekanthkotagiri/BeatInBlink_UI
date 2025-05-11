@@ -23,7 +23,7 @@ const StudentExams = () => {
       setInstituteName(student.institute_name);
 
       try {
-        const res = await API.get(`/auth/student/allStudentExams?studentId=${student.id}`);
+         const res = await API.get(`/auth/student/exams?studentId=${student.id}`);
         const response = Array.isArray(res.data) ? res.data[0] : res.data;
         setAllExams(response.exams || []);
       } catch (err) {
@@ -74,10 +74,8 @@ const StudentExams = () => {
                   <th className="px-4 py-3">Exam ID</th>
                   <th className="px-4 py-3">Title</th>
                   <th className="px-4 py-3">Scheduled Date</th>
-                  <th className="px-4 py-3">Duration</th>
-                  <th className="px-4 py-3">Score</th>
+                  <th className="px-4 py-3">taken_date</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Submitted At</th>
                   <th className="px-4 py-3">Download</th>
                 </tr>
               </thead>
@@ -85,17 +83,11 @@ const StudentExams = () => {
                 {exams.length > 0 ? (
                   exams.map((exam: any) => (
                     <tr key={exam.exam_id} className="border-t border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-3">{exam.examId}</td>
+                      <td className="px-4 py-3">{exam.exam_id}</td>
                       <td className="px-4 py-3">{exam.title}</td>
-                      <td className="px-4 py-3">{new Date(exam.scheduledDate).toLocaleString()}</td>
-                      <td className="px-4 py-3">{exam.durationMin} mins</td>
-                      <td className="px-4 py-3 font-semibold text-blue-600">{exam.score || '-'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`font-semibold ${exam.status === 'Pass' ? 'text-green-600' : exam.status === 'Fail' ? 'text-red-600' : 'text-gray-500'}`}>
-                          {exam.status || (exam.hasSubmitted ? 'Evaluating' : 'Pending')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{exam.submittedAt ? new Date(exam.submittedAt).toLocaleString() : '-'}</td>
+                      <td className="px-4 py-3">{new Date(exam.scheduled_date).toLocaleString()}</td>
+                     <td className="px-4 py-3">{new Date(exam.taken_date).toLocaleString()}</td>
+                      <td className="px-4 py-3">{exam.status}</td>
                       <td className="px-4 py-3">
                         {exam.hasSubmitted && (
                           <button
