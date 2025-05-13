@@ -30,5 +30,29 @@ export type ExamsWithQuestion = {
   correctAnswer?: string;
   marks?: number;
   enabled: boolean;
-  questions : Question[],
+  questions : GuestQuestion[],
+};
+
+export type GuestExamsWithQuestion = {
+  id: number;
+  title: string;
+  branch?: string;
+  scheduled_date: string;
+  pass_percentage: number;
+  duration_min?: number;
+  enable_time_limit: boolean;
+  restrict_access: boolean;
+  correctAnswer?: string;
+  marks?: number;
+  enabled: boolean;
+  questions : GuestQuestion[],
+};
+
+export type GuestQuestion = {
+  id: string; //
+  text: string;
+  type: string;
+  options?: string[];
+  correctAnswer: string;
+  marks: number;
 };

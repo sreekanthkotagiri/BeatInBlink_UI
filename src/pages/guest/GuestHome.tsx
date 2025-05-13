@@ -131,6 +131,7 @@ const GuestHome: React.FC = () => {
     };
 
     try {
+      console.log('bbbbbbbbbbbbbbbbbbb ', JSON.stringify(payload));
       const res = await API.post('/auth/guest/createExam', payload);
       if (res.data?.examId) {
         setLatestExamLink(`${window.location.origin}/guest-exam/${res.data.examId}`);
@@ -225,7 +226,7 @@ const GuestHome: React.FC = () => {
                 <tr className="bg-gray-200 text-gray-700">
                   <th className="py-2 px-4 border">Student Name</th>
                   <th className="py-2 px-4 border">Exam Title</th>
-                  <th className="py-2 px-4 border">Score (%)</th>
+                  <th className="py-2 px-4 border">Score</th>
                   <th className="py-2 px-4 border">Submitted At</th>
                 </tr>
               </thead>
@@ -234,7 +235,7 @@ const GuestHome: React.FC = () => {
                   <tr key={result.id} className="hover:bg-gray-100 transition text-center">
                     <td className="py-2 px-4 border">{result.student_name}</td>
                     <td className="py-2 px-4 border">{result.exam_title}</td>
-                    <td className="py-2 px-4 border">{result.score}%</td>
+                    <td className="py-2 px-4 border">{result.score}/{result.total_marks}</td>
                     <td className="py-2 px-4 border">{new Date(result.submitted_at).toLocaleString()}</td>
                   </tr>
                 ))}
