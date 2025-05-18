@@ -38,32 +38,6 @@ const StudentExams = () => {
     fetchStudentExams();
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const handleDownload = async (examId: number) => {
-    try {
-      const res = await API.get(`/auth/student/downloadExam?studentId=${studentId}&examId=${examId}`, {
-        responseType: 'blob',
-      });
-
-      const blob = new Blob([res.data], {
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'exam_result.docx';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('❌ Failed to download exam paper.');
-      console.error('Download error:', err);
-    }
-  };
-
   return (
     <div className="institute-home">
       <div className="dashboard-container">
@@ -82,7 +56,7 @@ const StudentExams = () => {
                 <tr>
                   <th className="px-4 py-3">Exam ID</th>
                   <th className="px-4 py-3">Title</th>
-                  <th className="px-4 py-3">taken_date</th>
+                  <th className="px-4 py-3">Taken Date</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Download</th>
                 </tr>
@@ -97,7 +71,7 @@ const StudentExams = () => {
                       <td className="px-4 py-3">{exam.status}</td>
                       <td className="px-4 py-3">
 
-                        {exam.status && exam.downloadable ? (
+                        {exam.status === 'submitted' && exam.downloadable ? (
                           <button
                             className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black p-2 rounded-full shadow-md"
                             onClick={async () => {

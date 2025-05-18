@@ -93,11 +93,11 @@ const StudentHomePage = () => {
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Enabled Exams</h3>
             <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                <thead className="bg-gray-100 text-gray-600 text-xs">
                   <tr>
                     <th className="px-4 py-3">Exam ID</th>
                     <th className="px-4 py-3">Title</th>
-                    <th className="px-4 py-3">Scheduled Date</th>
+                    <th className="px-4 py-3">Created Date</th>
                     <th className="px-4 py-3">Duration</th>
                     <th className="px-4 py-3">Action</th>
                   </tr>
@@ -106,10 +106,10 @@ const StudentHomePage = () => {
                   {Array.isArray(enabledExams) && enabledExams.length > 0 ? (
                     enabledExams.map((exam: any) => (
                       <tr key={exam.exam_id} className="border-t border-gray-100 hover:bg-gray-50">
-                        <td className="px-4 py-3">{exam.exam_id}</td>
+                        <td className="px-4 py-3">{exam.id}</td>
                         <td className="px-4 py-3">{exam.title}</td>
-                        <td className="px-4 py-3">{new Date(exam.scheduled_date).toLocaleString()}</td>
-                        <td className="px-4 py-3">{exam.duration_min} mins</td>
+                        <td className="px-4 py-3">{exam.created_at ? new Date(exam.created_at).toLocaleString() : 'NA' }</td>
+                        <td className="px-4 py-3">{exam.duration_min ? exam.duration_min : 'NA'} mins</td>
                         <td className="px-4 py-3">
                           <Link
                             to={`/student/submitExam/${exam.exam_id}`}
