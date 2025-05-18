@@ -29,7 +29,6 @@ const StudentExams = () => {
       try {
         const res = await API.get(`/auth/student/exams?studentId=${student.id}`);
         const response = Array.isArray(res.data) ? res.data[0] : res.data;
-        console.log('bbbbbbbbbbbbbbbbbbbb  ', JSON.stringify(response));
         setAllExams(response.exams || []);
       } catch (err) {
         console.error('Failed to fetch exams:', err);
