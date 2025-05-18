@@ -112,7 +112,7 @@ const StudentHomePage = () => {
                         <td className="px-4 py-3">{exam.duration_min ? exam.duration_min : 'NA'} mins</td>
                         <td className="px-4 py-3">
                           <Link
-                            to={`/student/submitExam/${exam.exam_id}`}
+                            to={`/student/submitExam/${exam.id}`}
                             className="text-blue-600 underline hover:text-blue-800"
                           >
                             Start
