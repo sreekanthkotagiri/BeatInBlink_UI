@@ -20,6 +20,7 @@ const StudentTakeExamPage = () => {
   const [examTitle, setExamTitle] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<{ score: number; status: string } | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   useEffect(() => {
@@ -69,13 +70,20 @@ const StudentTakeExamPage = () => {
     }
 
     try {
-      const res = await API.post('/auth/student/submitExam', {
+      const res = await API.post('/auth/student/submit-exam', {
         studentId: student.id,
         examId,
         answers,
       });
-      setResult(res.data);
       setSubmitted(true);
+
+      if (res.data.result_locked) {
+        setResult(null);
+        setResultMessage('📌 Your result is currently hidden by the institute. Please contact your instructor for details.');
+      } else {
+        setResult(res.data);
+        setResultMessage(null);
+      }
     } catch (err) {
       console.error('Submission failed:', err);
       alert('Failed to submit exam.');
@@ -161,6 +169,12 @@ const StudentTakeExamPage = () => {
               <p className="font-semibold text-green-700 mb-2">✅ Exam submitted successfully!</p>
               <p>Your Score: <strong>{result.score}</strong></p>
               <p>Status: <strong className={result.status === 'Pass' ? 'text-green-700' : 'text-red-600'}>{result.status}</strong></p>
+            </div>
+          )}
+          {submitted && resultMessage && (
+            <div className="mt-4 text-yellow-700 font-medium bg-yellow-100 p-3 rounded">
+              <p className="font-semibold text-green-700 mb-2">✅ Exam submitted successfully!</p>
+              {resultMessage}
             </div>
           )}
         </main>

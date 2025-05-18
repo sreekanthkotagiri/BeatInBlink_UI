@@ -6,8 +6,8 @@ import RadioButtonQuestion from '../../components/ui/questions/RadioButtonQuesti
 import TrueFalseQuestion from '../../components/ui/questions/TrueFalseQuestion';
 import ShortAnswerQuestion from '../../components/ui/questions/ShortAnswerQuestion';
 import Spinner from '../../components/ui/Spinner';
-import { CreateExamDrawerProps } from '../../types/guest';
 import QuestionForm from '../../lib/validateQuestions ';
+import { CreateExamDrawerProps } from '../../types/exam';
 
 
 const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
@@ -40,6 +40,8 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
   setEnableTimeLimit,
   restrictAccess,
   setRestrictAccess,
+  resultLocked,
+  setResultLocked,
   readOnly,
   downloadable,
   setDownloadable,
@@ -68,7 +70,7 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
               />
             </div>
 
-            {typeof expiryDate !== 'undefined' && typeof setExpiryDate === 'function' && setShowExpiryDate &&(
+            {typeof expiryDate !== 'undefined' && typeof setExpiryDate === 'function' && setShowExpiryDate && (
               <>
                 <div className="flex items-center gap-3">
                   <input
@@ -136,6 +138,12 @@ const CreateExamDrawer: React.FC<CreateExamDrawerProps> = ({
               <input type="checkbox" checked={restrictAccess} onChange={(e) => setRestrictAccess(e.target.checked)} disabled={readOnly} />
               <label className="text-sm text-gray-700 font-medium">🛡️ Restrict external window switch / cursor movement / Block keyboard shortcuts</label>
             </div>
+            {typeof resultLocked !== 'undefined' && typeof setResultLocked === 'function' && (
+              <div className="flex items-center gap-3">
+                <input type="checkbox" checked={resultLocked} onChange={(e) => setResultLocked(e.target.checked)} disabled={readOnly} />
+                <label className="text-sm text-gray-700 font-medium">🛡️ Result Locked</label>
+              </div>)
+            }
             {typeof downloadable !== 'undefined' && typeof setDownloadable === 'function' && (
               <div className="flex items-center gap-3">
                 <input

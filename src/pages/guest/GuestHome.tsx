@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/input';
 import API from '../../services/api';
 import Spinner from '../../components/ui/Spinner';
 import GuestHeader from './GuestHeader';
-import CreateExamDrawer from './CreateExamDrawer';
+import CreateExamDrawer from '../admin/CreateExamDrawer';
 
 const GuestHome: React.FC = () => {
   const navigate = useNavigate();

@@ -55,7 +55,7 @@ const StudentResults = () => {
             <h3 className="text-lg font-semibold mb-4 text-gray-700">Performance Summary</h3>
             <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 text-xs uppercase text-gray-600">
+                <thead className="bg-gray-100 text-xs text-gray-600">
                   <tr>
                     <th className="px-4 py-3">Exam ID</th>
                     <th className="px-4 py-3">Title</th>

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import API from '../../services/api';
 import { Button, Input, Select } from '../../components/ui/input';
 import { Question } from '../../types/exam';
-import CreateExamDrawer from '../guest/CreateExamDrawer';
+import CreateExamDrawer from './CreateExamDrawer';
 import { formatDate } from '../../utils/utils';
 
 interface Exam {
@@ -50,6 +50,8 @@ const ExamSettingsPage: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showExpiryDate, setShowExpiryDate] = useState(false);
+  const [resultLocked, setResultLocked] = useState(true);
+  const [downloadable, setDownloadable] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem('institute');
@@ -168,6 +170,44 @@ const ExamSettingsPage: React.FC = () => {
     setShowDrawer(true);
   };
 
+    const handleSubmit = async () => {
+    if (!title || passPercentage <= 0 || (enableTimeLimit && durationMin <= 0)) {
+      setFormError('Please fill all required fields correctly.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        title,
+        expires_at: expiryDate,
+        description,
+        duration_min: durationMin,
+        pass_percentage: passPercentage,
+        restrict_access: restrictAccess,
+        downloadable,
+        created_by: instituteId,
+        time_limit_enabled: enableTimeLimit,
+        questions,
+      };
+      if (editExamId) {
+        await API.put(`/auth/institute/exams/${editExamId}`, payload);
+      } else {
+        await API.post(`/auth/institute/create-exam`, payload);
+        alert('Exam created successfully!');
+      }
+
+      fetchExams();
+      setShowDrawer(false);
+      resetForm();
+    } catch (err) {
+      console.error('Submit failed:', err);
+      setFormError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -266,8 +306,12 @@ const ExamSettingsPage: React.FC = () => {
           setPassPercentage={setPassPercentage}
           restrictAccess={restrictAccess}
           setRestrictAccess={setRestrictAccess}
+          downloadable={downloadable}
+          setDownloadable={setDownloadable}
           enableTimeLimit={enableTimeLimit}
           setEnableTimeLimit={setEnableTimeLimit}
+          resultLocked={resultLocked}
+          setResultLocked={setResultLocked}
           questionMode={questionMode}
           setQuestionMode={setQuestionMode}
           questions={questions}
@@ -288,7 +332,7 @@ const ExamSettingsPage: React.FC = () => {
             updated[index].options = [...(updated[index].options || []), ''];
             setQuestions(updated);
           }}
-          handleSubmit={async () => { }}
+          handleSubmit={handleSubmit}
           submitting={submitting}
           formError={formError}
           readOnly={readOnlyView}
