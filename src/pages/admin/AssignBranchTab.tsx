@@ -79,10 +79,6 @@ const AssignBranchTab: React.FC = () => {
     if (!selectedExamId || selectedBranchIds.length === 0) return;
 
     try {
-      console.log('bbbbbbbbbbbbbbbbbbb ', JSON.stringify({
-        examId: selectedExamId,
-        branchIds: selectedBranchIds,
-      }));
       await API.post('/auth/institute/assign-exam-to-branches', {
         examId: selectedExamId,
         branchIds: selectedBranchIds,

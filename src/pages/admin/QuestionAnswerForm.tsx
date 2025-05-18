@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Textarea } from '../../components/ui/input';
+import { isValidType } from '../../utils/utils';
 
 interface QuestionAnswerFormProps {
     index: number;
@@ -16,7 +17,7 @@ interface QuestionAnswerFormProps {
     onChange: (questionId: string, value: string, type: string, checked?: boolean) => void;
 }
 const QuestionAnswerForm: React.FC<QuestionAnswerFormProps> = ({ question, answer, index, onChange }) => {
-    const type = question.type.toLowerCase();
+    const type = question.type;
 
     return (
         <div className="mb-6">
@@ -29,7 +30,7 @@ const QuestionAnswerForm: React.FC<QuestionAnswerFormProps> = ({ question, answe
             </p>
 
 
-            {Array.isArray(question.options) && (type === 'multiplechoice' || type === 'radiobutton') ? (
+            {Array.isArray(question.options) && (isValidType(type) === 'multiplechoice' || isValidType(type) === 'radiobutton') ? (
                 question.options.map((opt, i) => (
                     <div key={i} className="flex items-center gap-2 mb-2">
                         <input
@@ -48,7 +49,7 @@ const QuestionAnswerForm: React.FC<QuestionAnswerFormProps> = ({ question, answe
                         <label>{opt}</label>
                     </div>
                 ))
-            ) : type === 'shortanswer' ? (
+            ) : isValidType(type) === 'shortanswer' ? (
                 <Textarea
                     placeholder="Your answer"
                     value={answer || ''}

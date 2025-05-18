@@ -1,36 +1,41 @@
-// src/pages/admin/ExamSettingsTab.tsx
+// ✅ ExamSettingsPage.tsx (Manage/Create/Edit + Search + Enable/Lock)
 import React, { useEffect, useState } from 'react';
 import API from '../../services/api';
+import { Button, Input, Select } from '../../components/ui/input';
 import { Question } from '../../types/exam';
 import CreateExamDrawer from '../guest/CreateExamDrawer';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { formatDate } from '../../utils/utils';
 
 interface Exam {
-  id: number;
+  id: string;
   title: string;
-  scheduled_date: string;
-  expiry_date?: string;
+  branch: string;
+  created_at: string;
   duration_min: number;
   pass_percentage: number;
-  description: string;
-  status: 'enabled' | 'disabled';
+  expires_at: string;
+  is_enabled: boolean;
+  result_locked: boolean;
+  description?: string;
+  questions?: Question[];
+  status?: 'enabled' | 'disabled';
   restrict_access?: boolean;
   time_limit_enabled?: boolean;
-  questions?: Question[];
 }
 
-const ExamSettingsTab: React.FC = () => {
-
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-
+const ExamSettingsPage: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [sortField, setSortField] = useState('scheduled_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [instituteId, setInstituteId] = useState<number>();
   const [exams, setExams] = useState<Exam[]>([]);
+  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
+
   const [showDrawer, setShowDrawer] = useState(false);
   const [readOnlyView, setReadOnlyView] = useState(false);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [editExamId, setEditExamId] = useState<number | null>(null);
+  const [editExamId, setEditExamId] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
@@ -42,52 +47,45 @@ const ExamSettingsTab: React.FC = () => {
   const [enableTimeLimit, setEnableTimeLimit] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionMode, setQuestionMode] = useState<'manual' | 'upload' | null>(null);
-  const [instituteId, setInstituteId] = useState<number>();
-  const [hasOpenedDrawer, setHasOpenedDrawer] = useState(false);
-
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showExpiryDate, setShowExpiryDate] = useState(false);
 
   useEffect(() => {
-    const storedInstitute = localStorage.getItem('institute');
-    const institute = storedInstitute ? JSON.parse(storedInstitute) : null;
-    if (!institute || !institute.id) {
-      console.error('No institute ID found');
-      return;
+    const stored = localStorage.getItem('institute');
+    const institute = stored ? JSON.parse(stored) : null;
+    if (institute?.id) {
+      setInstituteId(institute.id);
+      fetchBranches(institute.id);
+      fetchExams(institute.id);
     }
-    setInstituteId(institute.id);
   }, []);
 
-  useEffect(() => {
-    if (instituteId) {
-      fetchExams();
-    }
-  }, [instituteId]);
-
-  const fetchExams = async () => {
+  const fetchBranches = async (id: number) => {
     try {
-      const res = await API.get(`/auth/institute/exams?instituteId=${instituteId}`);
+      const res = await API.get(`/auth/institute/branches?instituteId=${id}`);
+      setBranches(res.data || []);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+    }
+  };
+
+  const fetchExams = async (instituteIdOverride?: number) => {
+    try {
+      const res = await API.get('/auth/institute/search-exam', {
+        params: {
+          search,
+          branch: branchFilter,
+          date: dateFilter,
+          sortField,
+          sortOrder,
+          instituteId: instituteIdOverride || instituteId,
+        },
+      });
       setExams(res.data);
     } catch (err) {
-      console.error('Failed to load exams:', err);
+      console.error('Error fetching exams:', err);
     }
-  };
-
-  const toggleStatus = async (examId: number, currentStatus: 'enabled' | 'disabled') => {
-    try {
-      await API.post('/auth/institute/toggle-exam-status', {
-        examId,
-        status: currentStatus === 'enabled' ? 'disabled' : 'enabled',
-      });
-      fetchExams();
-    } catch (err) {
-      console.error('Toggle failed:', err);
-    }
-  };
-
-  const openCreateDrawer = () => {
-    resetForm();
-    setEditExamId(null);
-    setReadOnlyView(false);
-    setShowDrawer(true);
   };
 
   const openEditDrawer = async (exam: Exam) => {
@@ -98,7 +96,7 @@ const ExamSettingsTab: React.FC = () => {
       populateForm(res.data);
       setShowDrawer(true);
     } catch (err) {
-      console.error('Failed to load exam with questions:', err);
+      console.error('Failed to load exam:', err);
     }
   };
 
@@ -110,14 +108,14 @@ const ExamSettingsTab: React.FC = () => {
       populateForm(res.data);
       setShowDrawer(true);
     } catch (err) {
-      console.error('Failed to load exam with questions:', err);
+      console.error('Failed to load exam:', err);
     }
   };
 
   const populateForm = (exam: Exam) => {
     setTitle(exam.title);
-    setScheduledDate(exam.scheduled_date);
-    setExpiryDate(exam.expiry_date || '');
+    setScheduledDate(exam.created_at);
+    setExpiryDate(exam.expires_at || '');
     setDescription(exam.description || '');
     setDurationMin(exam.duration_min);
     setPassPercentage(exam.pass_percentage);
@@ -142,99 +140,124 @@ const ExamSettingsTab: React.FC = () => {
     setFormError('');
   };
 
-  const handleSubmit = async () => {
-    if (!title || !scheduledDate || passPercentage <= 0 || (enableTimeLimit && durationMin <= 0)) {
-      setFormError('Please fill all required fields correctly.');
-      return;
-    }
-
-    setSubmitting(true);
+  const toggleExamStatus = async (examId: string, currentStatus: boolean) => {
     try {
-      const payload = {
-        title,
-        scheduled_date: scheduledDate,
-        expiry_date: expiryDate,
-        description,
-        duration_min: durationMin,
-        pass_percentage: passPercentage,
-        restrict_access: restrictAccess,
-        time_limit_enabled: enableTimeLimit,
-        questions,
-      };
-      if (editExamId) {
-        await API.put(`/auth/institute/exams/${editExamId}`, payload);
-      } else {
-        await API.post(`/auth/institute/createExam?instituteId=${instituteId}`, payload);
-        alert('Exam created successfully!');
-      }
-
+      await API.put(`/auth/institute/exams/${examId}/enable`, {
+        is_enabled: !currentStatus,
+      });
       fetchExams();
-      setShowDrawer(false);
-      resetForm();
     } catch (err) {
-      console.error('Submit failed:', err);
-      setFormError('Something went wrong. Please try again.');
-    } finally {
-      setSubmitting(false);
+      console.error('Failed to toggle status:', err);
     }
   };
 
-  const handleDeleteOption = (index: number, optionIndex: number) => {
-    const updated = [...questions];
-    updated[index].options?.splice(optionIndex, 1);
-    setQuestions(updated);
+  const toggleResultLock = async (examId: string, currentLock: boolean) => {
+    try {
+      await API.put(`/auth/institute/exams/${examId}/lock-result`, {
+        result_locked: !currentLock,
+      });
+      fetchExams();
+    } catch (err) {
+      console.error('Failed to toggle result lock:', err);
+    }
   };
-
-  const handleAddOption = (index: number) => {
-    const updated = [...questions];
-    updated[index].options = [...(updated[index].options || []), ''];
-    setQuestions(updated);
-  };
-
-  const updateQuestion = (index: number, updatedQ: Question) => {
-    const updated = [...questions];
-    updated[index] = updatedQ;
-    setQuestions(updated);
-  };
-
-  const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      {
-        type: 'multiplechoice',
-        text: '',
-        options: ['', ''],
-        correctAnswer: '',
-        marks: 1,
-      },
-    ]);
+  const openCreateDrawer = () => {
+    resetForm();
+    setEditExamId(null);
+    setReadOnlyView(false);
+    setShowDrawer(true);
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-blue-800">Manage Exams</h2>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={openCreateDrawer}
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-semibold text-gray-800">🛠️ Exam Settings</h2>
+        <Button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
+          onClick={() => {
+            setShowDrawer(true);
+            setEditExamId(null);
+            setReadOnlyView(false);
+          }}
         >
           + Create Exam
-        </button>
+        </Button>
+      </div>
+      <div className="bg-white p-4 rounded-xl shadow-md mb-4 grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <Input placeholder="Search by title" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
+          <option value="">All Branches</option>
+          {branches.map((branch) => (
+            <option key={branch.id} value={branch.name}>{branch.name}</option>
+          ))}
+        </Select>
+        <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+        <div className="flex gap-2">
+          <Select value={sortField} onChange={(e) => setSortField(e.target.value)}>
+            <option value="scheduled_date">Scheduled Date</option>
+            <option value="title">Title</option>
+          </Select>
+          <Select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}>
+            <option value="asc">Asc</option>
+            <option value="desc">Desc</option>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <Button className="bg-green-600 hover:bg-green-700" onClick={() => fetchExams()}>🔍 Search</Button>
+      </div>
+
+      <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+        <table className="min-w-full text-sm text-left">
+          <thead className="bg-gray-100 text-gray-600">
+            <tr>
+              <th className="px-4 py-2">Title</th>
+              <th className="px-4 py-2">Created</th>
+              <th className="px-4 py-2">Expiry</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Result</th>
+              <th className="px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {exams.length > 0 ? exams.map((exam) => (
+              <tr key={exam.id} className="border-t hover:bg-gray-50">
+                <td className="px-4 py-2">{exam.title}</td>
+                <td className="px-4 py-2">{formatDate(exam.created_at)}</td>
+                <td className="px-4 py-2">{exam.expires_at ? formatDate(exam.expires_at) : 'NA'}</td>
+                <td className="px-4 py-2">
+                  <button onClick={() => toggleExamStatus(exam.id, exam.is_enabled)} className={`px-2 py-1 rounded-md text-white ${exam.is_enabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}>{exam.is_enabled ? 'Disable' : 'Enable'}</button>
+                </td>
+                <td className="px-4 py-2">
+                  <button onClick={() => toggleResultLock(exam.id, exam.result_locked)} className={`px-2 py-1 rounded-md text-white ${exam.result_locked ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-blue-600 hover:bg-blue-700'}`}>{exam.result_locked ? 'Unlock' : 'Lock'}</button>
+                </td>
+                <td className="px-4 py-2 space-x-2">
+                  <Button onClick={() => openEditDrawer(exam)} className="bg-blue-500 hover:bg-blue-600 text-white text-xs">Edit</Button>
+                  <Button onClick={() => openViewDrawer(exam)} className="bg-gray-500 hover:bg-gray-600 text-white text-xs">View</Button>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan={8} className="text-center text-gray-500 py-6">❗ No exams match the current filters.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {showDrawer && (
         <CreateExamDrawer
           isOpen={showDrawer}
-          onClose={() => {
-            setShowDrawer(false);
-            setReadOnlyView(false);
-          }}
+          onClose={() => { setShowDrawer(false); setReadOnlyView(false); }}
           title={title}
           setTitle={setTitle}
           scheduledDate={scheduledDate}
           setScheduledDate={setScheduledDate}
           expiryDate={expiryDate}
           setExpiryDate={setExpiryDate}
+          showExpiryDate={showExpiryDate}
+          setShowExpiryDate={setShowExpiryDate}
           description={description}
           setDescription={setDescription}
           durationMin={durationMin}
@@ -249,68 +272,30 @@ const ExamSettingsTab: React.FC = () => {
           setQuestionMode={setQuestionMode}
           questions={questions}
           setQuestions={setQuestions}
-          addQuestion={addQuestion}
-          updateQuestion={updateQuestion}
-          handleDeleteOption={handleDeleteOption}
-          handleAddOption={handleAddOption}
-          handleSubmit={handleSubmit}
+          addQuestion={() => setQuestions([...questions, { type: 'multiplechoice', text: '', options: ['', ''], correctAnswer: '', marks: 1 }])}
+          updateQuestion={(index, q) => {
+            const updated = [...questions];
+            updated[index] = q;
+            setQuestions(updated);
+          }}
+          handleDeleteOption={(index, optIdx) => {
+            const updated = [...questions];
+            updated[index].options?.splice(optIdx, 1);
+            setQuestions(updated);
+          }}
+          handleAddOption={(index) => {
+            const updated = [...questions];
+            updated[index].options = [...(updated[index].options || []), ''];
+            setQuestions(updated);
+          }}
+          handleSubmit={async () => { }}
           submitting={submitting}
           formError={formError}
           readOnly={readOnlyView}
         />
       )}
-
-      <div className="overflow-auto rounded shadow">
-        <table className="w-full text-sm border-collapse">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-4 py-2">ID</th>
-              <th className="border px-4 py-2">Title</th>
-              <th className="border px-4 py-2">Scheduled Date</th>
-              <th className="border px-4 py-2">Duration</th>
-              <th className="border px-4 py-2">Pass %</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {exams.length > 0 ? (
-              exams.map((exam) => (
-                <tr key={exam.id} className="even:bg-white odd:bg-gray-50">
-                  <td className="border px-4 py-2">{exam.id}</td>
-                  <td className="border px-4 py-2">{exam.title}</td>
-                  <td className="border px-4 py-2">{exam.scheduled_date}</td>
-                  <td className="border px-4 py-2">{exam.duration_min} min</td>
-                  <td className="border px-4 py-2">{exam.pass_percentage}%</td>
-                  <td className="border px-4 py-2 font-semibold text-green-700">{exam.status}</td>
-                  <td className="border px-4 py-2">
-                    <button className="text-blue-600 hover:underline mr-3" onClick={() => openEditDrawer(exam)}>
-                      Edit
-                    </button>
-                    <button className="text-gray-700 hover:underline mr-3" onClick={() => openViewDrawer(exam)}>
-                      View
-                    </button>
-                    <button
-                      className="text-red-600 hover:underline"
-                      onClick={() => toggleStatus(exam.id, exam.status)}
-                    >
-                      {exam.status === 'enabled' ? 'Disable' : 'Enable'}
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="text-center py-4 text-gray-500">
-                  No exams available.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };
 
-export default ExamSettingsTab;
+export default ExamSettingsPage;

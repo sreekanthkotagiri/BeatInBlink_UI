@@ -19,35 +19,32 @@ const InstituteHeader = () => {
   };
 
   return isAuthenticated && authState?.currentRole === 'institute' ? (
-    <header className="bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200 sticky top-0 z-10 h-24">
-      <div className="w-full h-full flex justify-between items-center px-0">
-
-        {/* Force logo to occupy full height and hug left */}
-        <div className="h-full pl-6 flex items-center">
+    <header className="bg-white border-b shadow-sm sticky top-0 z-10 h-20">
+      <div className="h-full flex justify-between items-center px-6">
+        {/* Logo */}
+        <div className="h-full flex items-center">
           <img
             src="/beatinblink3.png"
             alt="BeatInBlink Logo"
             className="h-full object-contain"
-            style={{ maxWidth: '320px' }} // 🛠️ Adjust this for the right width
+            style={{ maxWidth: '280px' }}
           />
         </div>
 
-        {/* Right side nav */}
-        <nav className="flex items-center gap-6 pr-6 text-sm font-medium text-gray-700">
-          <span className="text-gray-600 hidden sm:inline">
-            👋 Hello, <span className="font-semibold text-green-700">{authState.institute?.name}</span>
+        {/* Right Nav */}
+        <div className="flex items-center gap-6 text-sm text-gray-700 font-medium">
+          <span className="hidden sm:block">
+            👋 Hello, <span className="text-blue-700 font-semibold">{authState.institute?.name}</span>
           </span>
-
           <button
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm shadow-sm transition-all"
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow text-sm"
           >
             Logout
           </button>
-        </nav>
+        </div>
       </div>
     </header>
-
   ) : null;
 };
 

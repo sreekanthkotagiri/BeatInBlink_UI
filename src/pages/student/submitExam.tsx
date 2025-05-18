@@ -69,11 +69,6 @@ const StudentTakeExamPage = () => {
     }
 
     try {
-      console.log('dddddddddddddd ', JSON.stringify({
-        studentId: student.id,
-        examId,
-        answers,
-      }));
       const res = await API.post('/auth/student/submitExam', {
         studentId: student.id,
         examId,

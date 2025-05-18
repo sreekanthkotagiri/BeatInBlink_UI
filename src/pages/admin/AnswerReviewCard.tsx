@@ -1,4 +1,5 @@
 import React from 'react';
+import { isValidType } from '../../utils/utils';
 
 interface AnswerReviewCardProps {
   index: number;
@@ -59,7 +60,7 @@ const AnswerReviewCard: React.FC<AnswerReviewCardProps> = ({
       </div>
 
       {showAnswers ? (
-        isObjective && question.options && (question.type === 'radiobutton' || question.type === 'multiplechoice') ? (
+        isObjective && question.options && (isValidType(question.type) === 'radiobutton' || isValidType(question.type) === 'multiplechoice') ? (
           question.options.map((opt, i) => {
             const normOpt = normalize(opt);
             const selected = studentOptions.includes(normOpt);

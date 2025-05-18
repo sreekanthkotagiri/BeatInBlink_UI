@@ -1,10 +1,9 @@
-// Final GuestExamPage.tsx with corrected evaluation logic for all question types
+// Enhanced GuestExamPage.tsx for better UX and elegance
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../services/api';
-import { Button, Input, Textarea } from '../../components/ui/input';
-import { isValidType } from '../../utils/utils';
+import { Button, Input } from '../../components/ui/input';
 import GuestHeader from './GuestHeader';
 import { GuestExamsWithQuestion } from '../../types/exam';
 import AnswerReviewCard from '../admin/AnswerReviewCard';
@@ -20,7 +19,6 @@ const GuestExamPage: React.FC = () => {
   const [tempName, setTempName] = useState('');
   const [loadingExam, setLoadingExam] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [showNameModal, setShowNameModal] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -29,7 +27,8 @@ const GuestExamPage: React.FC = () => {
     totalScore: number;
     totalMarks: number;
     scorePercentage: number;
-    evaluatedAnswers?: Record<string, { correctAnswer: string; studentAnswer: string, marks: number }>;
+    evaluatedAnswers?: Record<string, { correctAnswer: string; studentAnswer: string; marks: number }>;
+    downloadable: boolean;
   } | null>(null);
 
   const fetchExam = async (id: string) => {
@@ -58,18 +57,13 @@ const GuestExamPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!studentName) {
-      setErrorMessage('Student name missing.');
+    if (!studentName.trim()) {
+      setErrorMessage('Student name is required.');
       setShowErrorModal(true);
       return;
     }
 
     try {
-      console.log('vvvvvvvvvvvvvvv  ', JSON.stringify({
-        examId,
-        studentName,
-        answers,
-      }));
       setIsSubmitting(true);
       const res = await API.post('/auth/guest/submitExam', {
         examId,
@@ -78,7 +72,6 @@ const GuestExamPage: React.FC = () => {
       });
       setResult(res.data);
       setSubmitted(true);
-      setShowModal(true);
     } catch (error) {
       setErrorMessage('Failed to submit answers.');
       setShowErrorModal(true);
@@ -89,15 +82,12 @@ const GuestExamPage: React.FC = () => {
 
   const renderEvaluatedAnswers = () => {
     if (!result?.evaluatedAnswers || !exam) return null;
-
     return (
-      <div className="mt-6 text-left">
-        <h3 className="text-lg font-bold mb-2 text-blue-700">📘 Your Answer Breakdown</h3>
+      <div className="mt-6 space-y-4">
+        <h3 className="text-xl font-semibold text-blue-800 mb-2">📘 Your Answer Breakdown</h3>
         {exam.questions.map((question, index) => {
-          if (!question.id) return null;
           const evaluated = result.evaluatedAnswers?.[question.id];
           if (!evaluated) return null;
-
           return (
             <AnswerReviewCard
               key={question.id}
@@ -113,14 +103,13 @@ const GuestExamPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
       <GuestHeader guestName={studentName} />
 
       {showNameModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-2xl text-center max-w-md w-full">
-            <h2 className="text-2xl font-bold text-blue-800 mb-4">Welcome to BeatInBlink!</h2>
-            <p className="text-gray-600 mb-4">Please enter your name to begin the exam</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-bold text-blue-700 mb-4 text-center">Enter Your Name to Start</h2>
             <Input
               type="text"
               placeholder="Your name"
@@ -129,7 +118,7 @@ const GuestExamPage: React.FC = () => {
               className="mb-4"
             />
             <Button
-              className="bg-blue-600 hover:bg-blue-700 w-full"
+              className="w-full bg-blue-600 hover:bg-blue-700"
               onClick={() => {
                 if (tempName.trim()) {
                   setStudentName(tempName.trim());
@@ -147,24 +136,10 @@ const GuestExamPage: React.FC = () => {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4">
-        {showModal && result && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-8 rounded-2xl text-left max-w-4xl w-full overflow-y-auto max-h-[90vh]">
-
-              <h2 className="text-2xl font-bold text-green-700 mb-4">✅ Exam Submitted Successfully!</h2>
-              <p className="text-lg mb-2">Total Score: <strong>{result.totalScore}</strong></p>
-              <p className="text-lg mb-2">Total Marks: <strong>{result.totalMarks}</strong></p>
-              <p className="text-lg mb-4">Score Percentage: <strong>{result.scorePercentage.toFixed(2)}%</strong></p>
-              {renderEvaluatedAnswers()}
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full mt-4" onClick={() => navigate('/')}>Go to Home</Button>
-            </div>
-          </div>
-        )}
-
-        {!loadingExam && !showModal && exam && !showNameModal && (
-          <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">{exam.title}</h2>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {!loadingExam && !submitted && exam && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-blue-800 mb-4">{exam.title}</h2>
             {exam.questions.map((question, index) => (
               <QuestionAnswerForm
                 key={question.id}
@@ -174,13 +149,73 @@ const GuestExamPage: React.FC = () => {
                 onChange={handleAnswerChange}
               />
             ))}
-            <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={handleSubmit} disabled={isSubmitting}>
+            <Button
+              className="w-full mt-6 bg-green-600 hover:bg-green-700"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? 'Submitting...' : 'Submit Exam'}
             </Button>
           </div>
         )}
 
-        {loadingExam && <div className="text-center p-8 text-gray-500">Loading exam...</div>}
+        {loadingExam && <div className="text-center text-gray-500">Loading exam...</div>}
+
+        {submitted && result && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+            <h2 className="text-2xl font-bold text-green-700 mb-4">✅ Exam Submitted Successfully!</h2>
+            <p className="text-lg mb-2">Total Score: <strong>{result.totalScore}</strong></p>
+            <p className="text-lg mb-2">Total Marks: <strong>{result.totalMarks}</strong></p>
+            <p className="text-lg mb-4">Score Percentage: <strong>{result.scorePercentage.toFixed(2)}%</strong></p>
+
+            {renderEvaluatedAnswers()}
+
+            <div className="mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              {result.downloadable ? (
+                <Button
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-semibold px-6 py-2 rounded-lg shadow-md w-full sm:w-auto"
+                  onClick={async () => {
+                    try {
+                      const response = await API.get(`/auth/guest/downloadExam?examId=${examId}`, {
+                        responseType: 'blob',
+                      });
+
+                      const blob = new Blob([response.data], {
+                        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                      });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'exam_result.docx';
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      alert('❌ Failed to download exam paper.');
+                      console.error('Download error:', err);
+                    }
+                  }}
+                >
+                  📄 Download Exam Paper
+                </Button>
+
+              ) : (
+                <Button
+                  className="bg-gray-300 text-gray-500 font-medium w-full sm:w-auto cursor-not-allowed"
+                  disabled
+                >
+                  📄 Download Disabled by Institute
+                </Button>
+              )}
+
+              <Button
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 to-blue-800 text-white font-semibold px-6 py-2 rounded-lg shadow-md w-full sm:w-auto"
+                onClick={() => navigate('/')}
+              >
+                🏠 Go to Home
+              </Button>
+            </div>
+          </div>
+        )}
 
         {showErrorModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">

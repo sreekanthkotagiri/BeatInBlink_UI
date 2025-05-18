@@ -36,7 +36,7 @@ const StudentHeader: React.FC = () => {
       {/* Right side nav */}
       <nav className="flex items-center gap-6 pr-6 text-sm font-medium text-gray-700">
         <span className="text-gray-600 hidden sm:inline">
-          👋 Hello, <span className="font-semibold text-green-700">{authState.student?.name}, {authState.student?.institute_name} {authState.student?.branch_name}</span>
+          👋 Hello, <span className="font-semibold text-green-700">{authState.student?.name}, {authState.student?.institute_name} ({authState.student?.branch_name})</span>
         </span>
   
         <button

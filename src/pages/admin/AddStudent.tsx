@@ -96,7 +96,6 @@ const AddStudentTab: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded shadow-sm"
             />
-            <Button onClick={() => toast.success('✅ Manual Test Toast')}>Test Toast</Button>
             <select
                 value={branchId}
                 onChange={(e) => setBranchId(Number(e.target.value))}
@@ -113,7 +112,7 @@ const AddStudentTab: React.FC = () => {
             <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow disabled:opacity-50"
+                className="bg-blue-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow disabled:opacity-50"
             >
                 {submitting ? 'Adding...' : '✅ Add Student'}
             </button>

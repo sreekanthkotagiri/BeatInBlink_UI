@@ -1,26 +1,38 @@
-// Full Code:
 import React, { useEffect, useState } from 'react';
 import '../../App.css';
-import Sidebar from '../../components/ui/Sidebar';
-import StudentTable from '../../components/manageStudents/StudentTable';
-import StudentModals from '../../components/manageStudents/StudentModals';
+import API from '../../services/api';
 import { Branch } from '../../types/branch';
 import { Student, NewStudent } from '../../types/student';
-import API from '../../services/api';
+
+import InstitutePageLayout from '../../components/layout/InstitutePageLayout';
+import StudentTable from '../../components/manageStudents/StudentTable';
+import StudentModals from '../../components/manageStudents/StudentModals';
 import BulkUploadStudent from './BulkUploadStudent';
 import AddStudentTab from './AddStudent';
 import AddBranchTab from './AddBranchTab';
+import TabbedSection from '../../components/layout/TabbedSection';
+import { Users, UserPlus, Building2, UploadCloud } from 'lucide-react';
 
 const ManageStudentAccessPage: React.FC = () => {
+  const tabs = [
+    { key: 'access', label: 'Enable/Disable Students', icon: Users },
+    { key: 'addStudent', label: 'Add Student', icon: UserPlus },
+    { key: 'addBranch', label: 'Add Branch', icon: Building2 },
+    { key: 'bulkUpload', label: 'Bulk Upload Students', icon: UploadCloud },
+  ] as const;
+  type TabKey = typeof tabs[number]['key'];
+
+  const [activeTab, setActiveTab] = useState<TabKey>('access');
+
   const [students, setStudents] = useState<Student[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [showStudentModal, setShowStudentModal] = useState(false);
-  const [showBranchModal, setShowBranchModal] = useState(false);
-  const [searchBranch, setSearchBranch] = useState('');
-  const [searchText, setSearchText] = useState('');
   const [filtered, setFiltered] = useState<Student[]>([]);
   const [editedStudents, setEditedStudents] = useState<Student[]>([]);
-  const [activeTab, setActiveTab] = useState<'access' | 'addStudent' | 'addBranch' | 'bulkUpload'>('access');
+  const [searchText, setSearchText] = useState('');
+  const [searchBranch, setSearchBranch] = useState('');
+
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [showBranchModal, setShowBranchModal] = useState(false);
 
   const [newStudent, setNewStudent] = useState<NewStudent>({
     name: '',
@@ -28,7 +40,6 @@ const ManageStudentAccessPage: React.FC = () => {
     password: '',
     branchId: '',
   });
-
   const [newBranch, setNewBranch] = useState('');
 
   useEffect(() => {
@@ -77,19 +88,13 @@ const ManageStudentAccessPage: React.FC = () => {
   };
 
   const handleToggleAccess = async (student: Student) => {
-    if (!editedStudents.length) return;
-
     const updated = editedStudents.map((s) =>
       Number(s.id) === Number(student.id) ? { ...s, is_enabled: !s.is_enabled } : s
     );
-
     setEditedStudents(updated);
     setFiltered(updated);
 
-    const toggledStudent =
-      updated.find((s) => String(s.id) === String(student.id)) ||
-      updated.find((s) => s.email === student.email);
-
+    const toggledStudent = updated.find((s) => String(s.id) === String(student.id));
     if (!toggledStudent) return;
 
     try {
@@ -108,91 +113,70 @@ const ManageStudentAccessPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']} />
-      <main className="flex-1 p-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Manage Student Access</h2>
+    <InstitutePageLayout enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']}>
+      <TabbedSection<TabKey> tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Tabs */}
-        <div className="flex gap-6 border-b mb-6">
-          {['access', 'addStudent', 'addBranch', 'bulkUpload'].map((tab) => (
-            <button
-              key={tab}
-              className={`pb-2 border-b-4 text-sm font-semibold ${activeTab === tab ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500'
-                }`}
-              onClick={() => setActiveTab(tab as any)}
+      {activeTab === 'access' && (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+          <div className="space-y-4 col-span-1">
+            <input
+              type="text"
+              placeholder="Search by name or email"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="border border-gray-300 bg-white px-4 py-2 rounded-md text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <select
+              value={searchBranch}
+              onChange={(e) => setSearchBranch(e.target.value)}
+              className="border border-gray-300 bg-white px-4 py-2 rounded-md text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-200"
             >
-              {tab === 'access' && 'Enable/Disable Students'}
-              {tab === 'addStudent' && 'Add Student'}
-              {tab === 'addBranch' && 'Add Branch'}
-              {tab === 'bulkUpload' && 'Bulk Upload Students'}
+              <option value="">All Branches</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.name}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleSearch}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm w-full transition"
+            >
+              Search
             </button>
-          ))}
-        </div>
+          </div>
 
-        {activeTab === 'access' && (
-          <>
-            <div className="flex gap-4 mb-6 items-end">
-              <input
-                type="text"
-                placeholder="Search by name or email"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                className="border border-gray-300 bg-white px-4 py-2 rounded-md text-sm w-1/2 focus:outline-none focus:ring-2 focus:ring-green-200"
-              />
-              <select
-                value={searchBranch}
-                onChange={(e) => setSearchBranch(e.target.value)}
-                className="border border-gray-300 bg-white px-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
-              >
-                <option value="">All Branches</option>
-                {branches.map((branch) => (
-                  <option key={branch.id} value={branch.name}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleSearch}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition"
-              >
-                Search
-              </button>
-            </div>
-
+          <div className="col-span-1 lg:col-span-3">
             <StudentTable
               students={filtered}
               onToggleAccess={handleToggleAccess}
               branches={branches}
               onBranchChange={handleStudentBranchChange}
             />
-          </>
-        )}
+          </div>
+        </div>
+      )}
 
-        {activeTab === 'addStudent' && <AddStudentTab />}
+      {activeTab === 'addStudent' && <AddStudentTab />}
+      {activeTab === 'addBranch' && <AddBranchTab />}
+      {activeTab === 'bulkUpload' && <BulkUploadStudent />}
 
-        {activeTab === 'addBranch'&& <AddBranchTab />}
-
-        {activeTab === 'bulkUpload' && <BulkUploadStudent />}
-
-
-        <StudentModals
-          showStudentModal={showStudentModal}
-          setShowStudentModal={setShowStudentModal}
-          showBranchModal={showBranchModal}
-          setShowBranchModal={setShowBranchModal}
-          newStudent={newStudent}
-          setNewStudent={setNewStudent}
-          newBranch={newBranch}
-          setNewBranch={setNewBranch}
-          branches={branches}
-          handleRegisterStudent={() => { }}
-          handleCreateBranch={() => { }}
-          handleBulkUpload={() => { }}
-          handleCSVUpload={() => { }}
-        />
-      </main>
-    </div>
+      <StudentModals
+        showStudentModal={showStudentModal}
+        setShowStudentModal={setShowStudentModal}
+        showBranchModal={showBranchModal}
+        setShowBranchModal={setShowBranchModal}
+        newStudent={newStudent}
+        setNewStudent={setNewStudent}
+        newBranch={newBranch}
+        setNewBranch={setNewBranch}
+        branches={branches}
+        handleRegisterStudent={() => {}}
+        handleCreateBranch={() => {}}
+        handleBulkUpload={() => {}}
+        handleCSVUpload={() => {}}
+      />
+    </InstitutePageLayout>
   );
 };
 

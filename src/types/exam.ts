@@ -1,14 +1,18 @@
-export type Exam = {
-    id: number;
-    title: string;
-    branch?: string;
-    scheduled_date: string;
-    pass_percentage: number;
-    duration_min?: number;
-    correctAnswer?: string;
-    marks?: number;
-    enabled: boolean;
-  };
+export interface Exam {
+  id: number;
+  title: string;
+  created_at: string;
+  expires_at?: string;
+  duration_min: number;
+  pass_percentage: number;
+  description: string;
+  is_enabled: 'enabled' | 'disabled';
+  restrict_access?: boolean;
+  result_locked: boolean;
+  time_limit_enabled?: boolean;
+  questions?: Question[];
+}
+
 
 export type Question = {
   text: string;

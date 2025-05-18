@@ -1,19 +1,18 @@
-// Moved All Results tab into a separate component for modularity
 import React, { useEffect, useState } from 'react';
 import '../../App.css';
 import API from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './../../context/AuthContext';
-import Sidebar from '../../components/ui/Sidebar';
+import { Result } from '../../types/results';
 import TopPerformersTab from './TopPerformersTab';
 import StudentWiseReportTab from './StudentWiseReportTab';
 import ExamSummaryTab from './ExamSummaryTab';
 import AllResultsTab from './AllResultsTab';
-import { Result } from '../../types/results';
+import InstitutePageLayout from '../../components/layout/InstitutePageLayout';
+import TabbedSection from '../../components/layout/TabbedSection';
+import { ListChecks, Trophy, UserCircle2, BarChart3 } from 'lucide-react';
 
 const InstituteResultsPage = () => {
-  
-
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [results, setResults] = useState<Result[]>([]);
@@ -28,7 +27,15 @@ const InstituteResultsPage = () => {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const [activeTab, setActiveTab] = useState<'all' | 'top' | 'student' | 'summary'>('all');
+  const tabs = [
+    { key: 'all', label: 'All Results', icon: ListChecks },
+    { key: 'top', label: 'Top Performers', icon: Trophy },
+    { key: 'student', label: 'Student-wise Report', icon: UserCircle2 },
+    { key: 'summary', label: 'Exam-wise Summary', icon: BarChart3 },
+  ] as const;
+
+  type TabKey = typeof tabs[number]['key'];
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
 
   useEffect(() => {
     const storedInstitute = localStorage.getItem('institute');
@@ -77,73 +84,46 @@ const InstituteResultsPage = () => {
   };
 
   return (
-    <div className="institute-home bg-gradient-to-br from-blue-50 to-white min-h-screen">
-      <div className="dashboard-container">
-        <Sidebar enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']} />
+    <InstitutePageLayout enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']}>
+      <TabbedSection<TabKey> tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="main-content p-8">
-          <div className="bg-white p-8 rounded-2xl shadow-xl">
-            {/* Horizontal Tabs */}
-            <div className="flex gap-6 mb-6 border-b">
-              {['all', 'top', 'student', 'summary'].map((tab) => (
-                <button
-                  key={tab}
-                  className={`pb-2 border-b-4 capitalize ${activeTab === tab
-                    ? 'border-blue-600 text-blue-800 font-semibold'
-                    : 'border-transparent text-gray-600'
-                    }`}
-                  onClick={() => setActiveTab(tab as any)}
-                >
-                  {tab === 'all' && 'All Results'}
-                  {tab === 'top' && 'Top Performers'}
-                  {tab === 'student' && 'Student-wise Report'}
-                  {tab === 'summary' && 'Exam-wise Summary'}
-                </button>
-              ))}
-            </div>
-
-            {activeTab === 'top' && (
-              <TopPerformersTab
-                examList={examList}
-                branchList={branchList}
-                instituteId={instituteId}
-              />
-            )}
-            {activeTab === 'student' && (
-              <StudentWiseReportTab
-                branchList={branchList}
-                examList={examList}
-                instituteId={instituteId}
-              />
-            )}
-            {activeTab === 'summary' && (
-              <ExamSummaryTab
-                examList={examList}
-                branchList={branchList}
-                instituteId={instituteId}
-              />
-            )}
-            {activeTab === 'all' && (
-              <AllResultsTab
-                results={results}
-                totalCount={totalCount}
-                searchTerm={searchTerm}
-                selectedBranch={selectedBranch}
-                selectedExam={selectedExam}
-                branchList={branchList}
-                examList={examList}
-                page={page}
-                setPage={setPage}
-                applyFilters={applyFilters}
-                setSearchTerm={setSearchTerm}
-                setSelectedBranch={setSelectedBranch}
-                setSelectedExam={setSelectedExam}
-              />
-            )}
+      <div className="mt-6">
+        {activeTab === 'top' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <TopPerformersTab examList={examList} branchList={branchList} instituteId={instituteId} />
           </div>
-        </main>
+        )}
+        {activeTab === 'student' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <StudentWiseReportTab branchList={branchList} examList={examList} instituteId={instituteId} />
+          </div>
+        )}
+        {activeTab === 'summary' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <ExamSummaryTab examList={examList} branchList={branchList} instituteId={instituteId} />
+          </div>
+        )}
+        {activeTab === 'all' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <AllResultsTab
+              results={results}
+              totalCount={totalCount}
+              searchTerm={searchTerm}
+              selectedBranch={selectedBranch}
+              selectedExam={selectedExam}
+              branchList={branchList}
+              examList={examList}
+              page={page}
+              setPage={setPage}
+              applyFilters={applyFilters}
+              setSearchTerm={setSearchTerm}
+              setSelectedBranch={setSelectedBranch}
+              setSelectedExam={setSelectedExam}
+            />
+          </div>
+        )}
       </div>
-    </div>
+    </InstitutePageLayout>
   );
 };
 

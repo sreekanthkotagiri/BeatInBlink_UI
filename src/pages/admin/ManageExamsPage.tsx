@@ -1,47 +1,50 @@
 import React, { useState } from 'react';
-import Sidebar from '../../components/ui/Sidebar';
 import SearchExamsTab from './SearchExamsTab';
 import AssignBranchTab from './AssignBranchTab';
 import AssignStudentTab from './AssignStudentTab';
 import ExamSettingsTab from './ExamSettingsTab';
-
+import InstitutePageLayout from '../../components/layout/InstitutePageLayout';
+import TabbedSection from '../../components/layout/TabbedSection';
+import { Search, Network, Users, SlidersHorizontal } from 'lucide-react';
 
 const ManageExamsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'search' | 'branch' | 'student' | 'settings'>('search');
+  const tabs = [
+    { key: 'search', label: 'Search Exam', icon: Search },
+    { key: 'branch', label: 'Assign To Branch', icon: Network },
+    { key: 'student', label: 'Assign To Students', icon: Users },
+    { key: 'settings', label: 'Create/Edit/Settings', icon: SlidersHorizontal },
+  ] as const;
+
+  type TabKey = typeof tabs[number]['key'];
+  const [activeTab, setActiveTab] = useState<TabKey>('search');
 
   return (
-    <div className="institute-home bg-gradient-to-br from-blue-50 to-white min-h-screen">
-      <div className="dashboard-container">
-        <Sidebar enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']} />
+    <InstitutePageLayout enabledTabs={['dashboard', 'manageStudents', 'manageExams', 'results', 'announcements']}>
+      <TabbedSection<TabKey> tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="main-content p-8">
-          <div className="bg-white p-8 rounded-2xl shadow-xl">
-            {/* Horizontal Tabs */}
-            <div className="flex gap-6 mb-6 border-b">
-              {['search', 'branch', 'student', 'settings'].map((tab) => (
-                <button
-                  key={tab}
-                  className={`pb-2 border-b-4 capitalize ${
-                    activeTab === tab ? 'border-blue-600 text-blue-800 font-semibold' : 'border-transparent text-gray-600'
-                  }`}
-                  onClick={() => setActiveTab(tab as any)}
-                >
-                  {tab === 'search' && 'Search Exams'}
-                  {tab === 'branch' && 'Assign to Branch'}
-                  {tab === 'student' && 'Assign to Students'}
-                  {tab === 'settings' && 'Create/Edit/Settings'}
-                </button>
-              ))}
-            </div>
-
-            {activeTab === 'search' && <SearchExamsTab />}
-            {activeTab === 'branch' && <AssignBranchTab />}
-            {activeTab === 'student' && <AssignStudentTab />}
-            {activeTab === 'settings' && <ExamSettingsTab />}
+      <div className="mt-6">
+        {activeTab === 'search' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <SearchExamsTab />
           </div>
-        </main>
+        )}
+        {activeTab === 'branch' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <AssignBranchTab />
+          </div>
+        )}
+        {activeTab === 'student' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <AssignStudentTab />
+          </div>
+        )}
+        {activeTab === 'settings' && (
+          <div className="bg-white p-6 rounded-xl shadow">
+            <ExamSettingsTab />
+          </div>
+        )}
       </div>
-    </div>
+    </InstitutePageLayout>
   );
 };
 

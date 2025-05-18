@@ -139,7 +139,7 @@ const BulkUploadStudent: React.FC = () => {
                         <button
                             onClick={handleUpload}
                             disabled={uploading}
-                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow disabled:opacity-50"
+                            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow disabled:opacity-50"
                         >
                             🚀 Upload All
                         </button>

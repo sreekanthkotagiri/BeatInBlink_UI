@@ -29,6 +29,8 @@ const GuestHome: React.FC = () => {
   const [showLinkPopup, setShowLinkPopup] = useState(false);
   const [loadingExams, setLoadingExams] = useState(false);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [downloadable, setDownloadable] = useState(true);
+
 
   useEffect(() => {
     // Set default date to tomorrow at 10am
@@ -128,10 +130,10 @@ const GuestHome: React.FC = () => {
       })),
       enableTimeLimit,
       restrictAccess,
+      downloadable,
     };
 
     try {
-      console.log('bbbbbbbbbbbbbbbbbbb ', JSON.stringify(payload));
       const res = await API.post('/auth/guest/createExam', payload);
       if (res.data?.examId) {
         setLatestExamLink(`${window.location.origin}/guest-exam/${res.data.examId}`);
@@ -254,8 +256,7 @@ const GuestHome: React.FC = () => {
         setTitle={setTitle}
         scheduledDate={scheduledDate}
         setScheduledDate={setScheduledDate}
-        expiryDate={expiryDate}
-        setExpiryDate={setExpiryDate}
+
         description={description}
         setDescription={setDescription}
         durationMin={durationMin}
@@ -279,6 +280,8 @@ const GuestHome: React.FC = () => {
         setRestrictAccess={setRestrictAccess}
         sendTimeLimitToApi={enableTimeLimit}
         sendCursorLockToApi={restrictAccess}
+        downloadable={downloadable}
+        setDownloadable={setDownloadable}
       />
     </>
   );

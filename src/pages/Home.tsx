@@ -7,8 +7,8 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestName, setGuestName] = useState('');
-
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'about' | 'features' | 'pricing' | 'contact'>('about');
 
   useEffect(() => {
     const guestCode = localStorage.getItem('guestCode');
@@ -18,7 +18,7 @@ const Home: React.FC = () => {
   }, [navigate]);
 
   const handleGuestSubmit = async () => {
-    if (!guestName.trim() ) {
+    if (!guestName.trim()) {
       alert('Please enter Name!');
       return;
     }
@@ -52,7 +52,6 @@ const Home: React.FC = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200 sticky top-0 z-10 h-24">
         <div className="w-full h-full flex justify-between items-center px-0">
-          {/* Logo */}
           <div className="h-full pl-6 flex items-center">
             <img
               src="/beatinblink3.png"
@@ -61,8 +60,6 @@ const Home: React.FC = () => {
               style={{ maxWidth: '320px' }}
             />
           </div>
-
-          {/* Right side actions */}
           <nav className="flex items-center gap-4 pr-6">
             <Link
               to="/login"
@@ -79,7 +76,6 @@ const Home: React.FC = () => {
           </nav>
         </div>
       </header>
-
 
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center text-center px-6 py-16 bg-gray-50">
@@ -104,38 +100,80 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-16 px-6 bg-white text-center">
-        <h3 className="text-4xl font-bold text-blue-700 mb-6">About BeatInBlink</h3>
-        <p className="max-w-4xl mx-auto text-gray-600 text-lg">
-          BeatInBlink is a modern platform designed to simplify exam management.
-          Whether you're an educator, an institute, or an individual learner —
-          you can create, share, and take exams quickly and effortlessly.
-        </p>
-      </section>
+      {/* Tab Section */}
+      <section className="bg-white px-6 pt-10 text-center border-t border-gray-200">
+        <div className="flex justify-center gap-6 mb-6">
+          {['about', 'features', 'pricing', 'contact'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-4 py-2 rounded-t-md font-semibold border-b-2 capitalize ${
+                activeTab === tab ? 'text-blue-700 border-blue-700' : 'text-gray-500 border-transparent'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
 
-      {/* Features Section */}
-      <section className="py-16 px-6 bg-gray-100 text-center">
-        <h3 className="text-4xl font-bold text-green-700 mb-6">Features</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <h4 className="text-xl font-bold mb-2 text-blue-800">Create Exams Instantly</h4>
-            <p className="text-gray-600">
-              Add questions manually or upload using CSV. Multiple types supported: MCQ, Radio, Short Answer, True/False.
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <h4 className="text-xl font-bold mb-2 text-blue-800">Share Secure Links</h4>
-            <p className="text-gray-600">
-              Generate secure exam links automatically. Share them with your students easily!
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <h4 className="text-xl font-bold mb-2 text-blue-800">Instant Auto Evaluation</h4>
-            <p className="text-gray-600">
-              Students submit their exams, and scores are auto-calculated instantly.
-            </p>
-          </div>
+        <div className="max-w-5xl mx-auto py-10 px-4 bg-gray-50 rounded-lg shadow-inner">
+          {activeTab === 'about' && (
+            <>
+              <h3 className="text-3xl font-bold text-blue-700 mb-4">About BeatInBlink</h3>
+              <p className="text-gray-700 text-lg">
+                BeatInBlink is a modern platform designed to simplify exam management.
+                Whether you're an educator, an institute, or an individual learner — you can create, share,
+                and take exams quickly and effortlessly.
+              </p>
+            </>
+          )}
+
+          {activeTab === 'features' && (
+            <>
+              <h3 className="text-3xl font-bold text-green-700 mb-6">Features</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                  <h4 className="text-xl font-bold mb-2 text-blue-800">Create Exams Instantly</h4>
+                  <p className="text-gray-600">
+                    Add questions manually or upload using CSV. Multiple types supported: MCQ, Radio, Short Answer, True/False.
+                  </p>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                  <h4 className="text-xl font-bold mb-2 text-blue-800">Share Secure Links</h4>
+                  <p className="text-gray-600">
+                    Generate secure exam links automatically. Share them with your students easily!
+                  </p>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                  <h4 className="text-xl font-bold mb-2 text-blue-800">Instant Auto Evaluation</h4>
+                  <p className="text-gray-600">
+                    Students submit their exams, and scores are auto-calculated instantly.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'pricing' && (
+            <>
+              <h3 className="text-3xl font-bold text-purple-700 mb-4">Pricing</h3>
+              <p className="text-gray-700 text-lg">
+                BeatInBlink is <span className="font-semibold text-green-600">currently free</span> for all users!
+                We aim to keep core features accessible to everyone. However, premium features and pricing plans
+                may be introduced in the future.
+              </p>
+            </>
+          )}
+
+          {activeTab === 'contact' && (
+            <>
+              <h3 className="text-3xl font-bold text-blue-700 mb-4">Contact Us</h3>
+              <p className="text-gray-700 text-lg">
+                📧 Email: <a href="mailto:contactbeatinblink@gmail.com" className="text-blue-600 underline">contactbeatinblink@gmail.com</a><br />
+                📱 WhatsApp: <a href="https://wa.me/919030034384" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">+91 90300 34384</a>
+              </p>
+            </>
+          )}
         </div>
       </section>
 
