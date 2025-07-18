@@ -103,7 +103,6 @@ const StudentResults = () => {
               </table>
             </div>
           </div>
-          </div>
         </main>
       </div>
     </div>
