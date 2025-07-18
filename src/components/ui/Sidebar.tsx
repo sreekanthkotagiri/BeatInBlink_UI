@@ -25,8 +25,8 @@ const Sidebar: React.FC<SidebarProps> = ({ enabledTabs }) => {
   ];
 
   return (
-    <aside className="clean-sidebar w-64 bg-white border-r px-4 py-6">
-      <ul className="space-y-2">
+    <aside className="clean-sidebar w-64 bg-white/95 backdrop-blur-sm border-r border-gray-100/50 px-6 py-8">
+      <ul className="space-y-3">
         {tabs
           .filter((tab) => enabledTabs.includes(tab.name))
           .map((tab) => {
@@ -35,10 +35,10 @@ const Sidebar: React.FC<SidebarProps> = ({ enabledTabs }) => {
               <li key={tab.name}>
                 <Link
                   to={tab.path}
-                  className={`block px-4 py-2 rounded-md text-sm font-medium transition ${
+                  className={`block px-6 py-4 rounded-2xl text-base font-semibold transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-100 text-blue-700 font-semibold'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transform scale-105'
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 hover:shadow-md hover:scale-102'
                   }`}
                 >
                   {tab.label}
